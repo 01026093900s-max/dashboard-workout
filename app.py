@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-NEW START 운동 인증 대시보드 — 외부 공유용 (읽기 전용)
-구글 시트에서 데이터를 읽어와서 표시한다. 크롤링 기능 없음.
-Streamlit Cloud에 배포하여 공유 URL로 접속 가능.
-"""
-import streamlit as st
+import json
+import os
 import re
+import streamlit as st
 from datetime import datetime, timedelta
 from collections import OrderedDict
 
@@ -34,25 +30,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── 데이터 상수 ──
 NAME_ID_LIST = [
-    ("최수겸", "Sue"),
-    ("최수림", "프수"),
-    ("강민찬", "김보람아님"),
-    ("곽민제", "곽카몰리"),
-    ("김보람", "김봚"),
-    ("김예덕", "예덕"),
-    ("박건우", "베건이"),
-    ("박성훈", "박성훈"),
-    ("박예서", "바게서"),
-    ("서민혁", "중화동고라니"),
-    ("서지우", "쥬"),
-    ("서희진", "희진"),
-    ("심윤교", "윤교"),
-    ("안수빈", "수비니"),
-    ("유영현", "TIMYOU"),
-    ("이건희", "R거U니N"),
-    ("이찬우", "콜드가우"),
+    ("최수겸", "Sue"), ("최수림", "프수"), ("강민찬", "김보람아님"),
+    ("곽민제", "곽카몰리"), ("김보람", "김봚"), ("김예덕", "예덕"),
+    ("박건우", "베건이"), ("박성훈", "박성훈"), ("박예서", "바게서"),
+    ("서민혁", "중화동고라니"), ("서지우", "쥬"), ("서희진", "희진"),
+    ("심윤교", "윤교"), ("안수빈", "수비니"), ("유영현", "TIMYOU"),
+    ("이건희", "R거U니N"), ("이찬우", "콜드가우"),
 ]
 ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
@@ -66,15 +50,12 @@ for _n, _c in NAME_ID_LIST:
     if len(_n) >= 3:
         _TITLE_ALIASES[_n[1:]] = _c
 _TITLE_ALIASES.update({
-    "콜드카우": "콜드가우",
-    "민찬": "김보람아님",
-    "베이비러너": "Sue",
-    "오수완": "프수",
-    "수완": "프수",
+    "콜드카우": "콜드가우", "민찬": "김보람아님", "민찬이": "김보람아님",
+    "베이비러너": "Sue", "오수완": "프수", "수완": "프수", "timyou": "TIMYOU",
 })
 
 
-def _parse_naver_date(date_str: str):
+def _parse_naver_date(date_str):
     date_str = (date_str or "").strip()
     if not date_str:
         return None
@@ -113,32 +94,32 @@ def _author_from_row(r):
     return author
 
 
-# ── 구글 시트에서 데이터 읽기 (5분 캐시) ──
-@st.cache_data(ttl=300)
-def _load_from_sheets():
-    from google_sheets import download_rows
-    return download_rows()
+def _load_data():
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+    if not os.path.isfile(data_path):
+        return [], ""
+    try:
+        with open(data_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception:
+        return [], ""
+    if isinstance(payload, list):
+        return payload, ""
+    if isinstance(payload, dict):
+        return payload.get("rows", []), payload.get("last_updated", "")
+    return [], ""
 
 
-# ── 메인 ──
 st.title("NEW START 운동 인증 대시보드")
-
-try:
-    cafe_rows, last_updated = _load_from_sheets()
-except Exception as e:
-    st.error(f"구글 시트 연결 실패: {e}")
-    st.stop()
+cafe_rows, last_updated = _load_data()
 
 if last_updated:
     st.markdown(f'<span class="update-badge">마지막 업데이트: {last_updated}</span>', unsafe_allow_html=True)
-else:
-    st.caption("아직 업로드된 데이터가 없습니다.")
 
 if not cafe_rows:
-    st.info("데이터가 아직 업로드되지 않았습니다.")
+    st.info("데이터가 아직 업로드되지 않았습니다. data.json 파일을 추가해 주세요.")
     st.stop()
 
-# ── 주간 운동 인증 현황 ──
 st.markdown("---")
 st.subheader("주간 운동 인증 현황")
 
@@ -198,9 +179,7 @@ for row_label, day_cells, count in table_rows:
     cells = [f'<td style="padding:6px 10px; border:1px solid #ddd; font-weight:bold;">{row_label}</td>']
     for val, checked in day_cells:
         if checked:
-            cells.append(
-                f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">✓</td>'
-            )
+            cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">✓</td>')
         else:
             cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
     cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; text-align:center;">{count}회</td>')
@@ -217,7 +196,6 @@ week_table_html = (
 )
 st.markdown(week_table_html, unsafe_allow_html=True)
 
-# ── 이번주 인증 TOP3 ──
 st.markdown("---")
 st.subheader("이번주 인증 TOP3")
 sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
