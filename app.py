@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 NEW START 운동 인증 대시보드 — 외부 공유용 (읽기 전용)
 data.json 파일에서 크롤링 데이터를 읽어 표시한다.
@@ -97,8 +96,11 @@ def _parse_naver_date(date_str: str):
 
 def _author_from_row(r):
     author = (r.get("작성자") or "").strip()
-    if author and any(author == cid for _, cid in NAME_ID_LIST):
-        return author
+    # 작성자-아이디 매칭 시 대소문자 무시 (예: TimYou → TIMYOU)
+    if author:
+        for _, cid in NAME_ID_LIST:
+            if cid and (author == cid or author.strip().upper() == cid.strip().upper()):
+                return cid
     title = (r.get("제목") or "").strip()
     title_lower = title.lower()
     best_match = None
@@ -184,7 +186,9 @@ for r in cafe_rows:
         continue
     is_bible = _is_bible_copy(r)
     for name, cid in NAME_ID_LIST:
-        if author == cid or (author and cid and author.strip() == cid.strip()):
+        if not cid:
+            continue
+        if author == cid or (author and author.strip().upper() == cid.strip().upper()):
             key = (name, d)
             if key not in posted:
                 posted[key] = {"exercise": 0, "bible": False}
@@ -205,15 +209,15 @@ for name, cid in NAME_ID_LIST:
     for d in week_dates:
         info = posted.get((name, d))
         if not info:
-            day_cells.append(("", False, None))  # (표시텍스트, 채움여부, 타입: None/'exercise'/'bible')
+            day_cells.append(("", False, None))
             continue
         ex, bible = info.get("exercise", 0), info.get("bible", False)
         if bible:
             day_cells.append(("성경필사", True, "bible"))
-            count += 1  # 성경필사는 해당 날 1회로 인정
+            count += 1
         elif ex and ex > 0:
             day_cells.append(("✓", True, "exercise"))
-            count += 1  # 운동은 해당 날 1회만 인정
+            count += 1
         else:
             day_cells.append(("", False, None))
     table_rows.append((row_label, day_cells, count))
