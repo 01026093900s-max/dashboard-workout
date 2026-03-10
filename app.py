@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+NEW START 운동 인증 대시보드 — 외부 공유용 (읽기 전용)
+data.json 파일에서 크롤링 데이터를 읽어 표시한다.
+Hugging Face Spaces 또는 Streamlit Cloud에 배포 가능.
+"""
 import json
 import os
 import re
@@ -30,13 +36,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── 데이터 상수 ──
 NAME_ID_LIST = [
-    ("최수겸", "Sue"), ("최수림", "프수"), ("강민찬", "김보람아님"),
-    ("곽민제", "곽카몰리"), ("김보람", "김봚"), ("김예덕", "예덕"),
-    ("박건우", "베건이"), ("박성훈", "박성훈"), ("박예서", "바게서"),
-    ("서민혁", "중화동고라니"), ("서지우", "쥬"), ("서희진", "희진"),
-    ("심윤교", "윤교"), ("안수빈", "수비니"), ("유영현", "TIMYOU"),
-    ("이건희", "R거U니N"), ("이찬우", "콜드가우"),
+    ("최수겸", "Sue"),
+    ("최수림", "프수"),
+    ("강민찬", "김보람아님"),
+    ("곽민제", "곽카몰리"),
+    ("김보람", "김봚"),
+    ("김예덕", "예덕"),
+    ("박건우", "베건이"),
+    ("박성훈", "박성훈"),
+    ("박예서", "바게서"),
+    ("서민혁", "중화동고라니"),
+    ("서지우", "쥬"),
+    ("서희진", "희진"),
+    ("심윤교", "윤교"),
+    ("안수빈", "수비니"),
+    ("유영현", "TIMYOU"),
+    ("이건희", "R거U니N"),
+    ("이찬우", "콜드가우"),
 ]
 ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
@@ -50,12 +68,17 @@ for _n, _c in NAME_ID_LIST:
     if len(_n) >= 3:
         _TITLE_ALIASES[_n[1:]] = _c
 _TITLE_ALIASES.update({
-    "콜드카우": "콜드가우", "민찬": "김보람아님", "민찬이": "김보람아님",
-    "베이비러너": "Sue", "오수완": "프수", "수완": "프수", "timyou": "TIMYOU",
+    "콜드카우": "콜드가우",
+    "민찬": "김보람아님",
+    "민찬이": "김보람아님",
+    "베이비러너": "Sue",
+    "오수완": "프수",
+    "수완": "프수",
+    "timyou": "TIMYOU",
 })
 
 
-def _parse_naver_date(date_str):
+def _parse_naver_date(date_str: str):
     date_str = (date_str or "").strip()
     if not date_str:
         return None
@@ -95,6 +118,7 @@ def _author_from_row(r):
 
 
 def _load_data():
+    """data.json 파일에서 크롤링 데이터를 읽는다."""
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
     if not os.path.isfile(data_path):
         return [], ""
@@ -103,14 +127,19 @@ def _load_data():
             payload = json.load(f)
     except Exception:
         return [], ""
+
     if isinstance(payload, list):
         return payload, ""
     if isinstance(payload, dict):
-        return payload.get("rows", []), payload.get("last_updated", "")
+        rows = payload.get("rows", [])
+        updated = payload.get("last_updated", "")
+        return rows, updated
     return [], ""
 
 
+# ── 메인 ──
 st.title("NEW START 운동 인증 대시보드")
+
 cafe_rows, last_updated = _load_data()
 
 if last_updated:
@@ -120,6 +149,7 @@ if not cafe_rows:
     st.info("데이터가 아직 업로드되지 않았습니다. data.json 파일을 추가해 주세요.")
     st.stop()
 
+# ── 주간 운동 인증 현황 ──
 st.markdown("---")
 st.subheader("주간 운동 인증 현황")
 
@@ -131,7 +161,16 @@ week_dates = [week_sun + timedelta(days=i) for i in range(7)]
 period_str = f"이번 주 기간: {week_sun.month}월 {week_sun.day}일 ({WEEKDAY_NAMES[week_sun.weekday()]}) ~ {week_sat.month}월 {week_sat.day}일 ({WEEKDAY_NAMES[week_sat.weekday()]})"
 st.caption(period_str)
 
+# (실명, 날짜) -> {'exercise': 0/1, 'bible': 성경필사 여부}
 posted = {}
+
+
+def _is_bible_copy(row):
+    """제목에 '필사' 키워드가 있으면 성경필사로 분류 (예: 1주차 보충필사, 성경 필사)."""
+    title = (row.get("제목") or "").strip()
+    return "필사" in title
+
+
 for r in cafe_rows:
     if not isinstance(r, dict):
         continue
@@ -143,22 +182,40 @@ for r in cafe_rows:
     d = dt.date()
     if d < week_sun or d > week_dates[-1]:
         continue
+    is_bible = _is_bible_copy(r)
     for name, cid in NAME_ID_LIST:
         if author == cid or (author and cid and author.strip() == cid.strip()):
-            posted[(name, d)] = True
+            key = (name, d)
+            if key not in posted:
+                posted[key] = {"exercise": 0, "bible": False}
+            if is_bible:
+                posted[key]["bible"] = True
+            else:
+                # 같은 날 여러 번 올려도 1회만 운동으로 인정
+                posted[key]["exercise"] = 1
             break
 
+# 표 데이터: 행 = 실명 (아이디), 열 = 일~토 날짜 + 비고
+# 셀: 성경필사 → 노란 배경 '성경필사' / 운동 → 연두색 ✓ / 없음
 table_rows = []
 for name, cid in NAME_ID_LIST:
     row_label = f"{name} ({cid})"
     count = 0
     day_cells = []
     for d in week_dates:
-        if posted.get((name, d)):
-            day_cells.append(("✓", True))
-            count += 1
+        info = posted.get((name, d))
+        if not info:
+            day_cells.append(("", False, None))  # (표시텍스트, 채움여부, 타입: None/'exercise'/'bible')
+            continue
+        ex, bible = info.get("exercise", 0), info.get("bible", False)
+        if bible:
+            day_cells.append(("성경필사", True, "bible"))
+            count += 1  # 성경필사는 해당 날 1회로 인정
+        elif ex and ex > 0:
+            day_cells.append(("✓", True, "exercise"))
+            count += 1  # 운동은 해당 날 1회만 인정
         else:
-            day_cells.append(("", False))
+            day_cells.append(("", False, None))
     table_rows.append((row_label, day_cells, count))
 
 
@@ -171,15 +228,25 @@ header_cells = "".join(
 )
 header_cells += '<th style="padding:6px 10px; border:1px solid #ddd;">비고</th>'
 
+# 성경필사 셀 스타일: BG #FFE98F, 글씨 #0D0D0D
+BIBLE_BG = "#FFE98F"
+BIBLE_TEXT = "#0D0D0D"
+
 is_friday = today.weekday() == 4
 body_rows = []
 for row_label, day_cells, count in table_rows:
     row_bg = (ROW_HIGHLIGHT_UNDER_3 if count < 3 else "") if is_friday else ""
     tr_style = f"background-color:{row_bg};" if row_bg else ""
     cells = [f'<td style="padding:6px 10px; border:1px solid #ddd; font-weight:bold;">{row_label}</td>']
-    for val, checked in day_cells:
-        if checked:
-            cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">✓</td>')
+    for val, checked, cell_type in day_cells:
+        if checked and cell_type == "bible":
+            cells.append(
+                f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{BIBLE_BG}; color:{BIBLE_TEXT}; text-align:center;">{val}</td>'
+            )
+        elif checked and cell_type == "exercise":
+            cells.append(
+                f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">{val}</td>'
+            )
         else:
             cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
     cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; text-align:center;">{count}회</td>')
@@ -191,11 +258,12 @@ week_table_html = (
     f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 (아이디)</th>{header_cells}</tr></thead>'
     "<tbody>" + "".join(body_rows) + "</tbody>"
     "</table>"
-    '<p style="margin-top:8px; font-size:12px; color:#666;">금요일 기준 주 3회 미만 시 해당 행을 연한 빨간색으로 표시합니다.</p>'
+    '<p style="margin-top:8px; font-size:12px; color:#666;">하루에 여러 번 올려도 1회로 인정합니다. 제목에 "필사"가 있으면 성경필사로 분류해 노란 배경에 "성경필사" 표시. 금요일 기준 주 3회 미만 시 해당 행을 연한 빨간색으로 표시합니다.</p>'
     "</div>"
 )
 st.markdown(week_table_html, unsafe_allow_html=True)
 
+# ── 이번주 인증 TOP3 ──
 st.markdown("---")
 st.subheader("이번주 인증 TOP3")
 sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
