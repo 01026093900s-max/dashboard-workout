@@ -53,7 +53,7 @@ NAME_ID_LIST = [
     ("안수빈", "수비니"),
     ("유영현", "TIMYOU"),
     ("이건희", "R거U니N"),
-    ("이찬우", "콜드가우"),
+    ("이찬우", "콜드카우"),
 ]
 ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
@@ -67,7 +67,7 @@ for _n, _c in NAME_ID_LIST:
     if len(_n) >= 3:
         _TITLE_ALIASES[_n[1:]] = _c
 _TITLE_ALIASES.update({
-    "콜드카우": "콜드가우",
+    "콜드카우": "콜드카우",
     "민찬": "김보람아님",
     "민찬이": "김보람아님",
     "베이비러너": "Sue",
