@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 NEW START 운동 인증 대시보드 — 외부 공유용 (읽기 전용)
 data.json 파일에서 크롤링 데이터를 읽어 표시한다.
@@ -67,7 +68,7 @@ for _n, _c in NAME_ID_LIST:
     if len(_n) >= 3:
         _TITLE_ALIASES[_n[1:]] = _c
 _TITLE_ALIASES.update({
-    "콜드카우": "콜드카우",
+    "콜드가우": "콜드카우",
     "민찬": "김보람아님",
     "민찬이": "김보람아님",
     "베이비러너": "Sue",
@@ -209,15 +210,15 @@ for name, cid in NAME_ID_LIST:
     for d in week_dates:
         info = posted.get((name, d))
         if not info:
-            day_cells.append(("", False, None))
+            day_cells.append(("", False, None))  # (표시텍스트, 채움여부, 타입: None/'exercise'/'bible')
             continue
         ex, bible = info.get("exercise", 0), info.get("bible", False)
         if bible:
             day_cells.append(("성경필사", True, "bible"))
-            count += 1
+            count += 1  # 성경필사는 해당 날 1회로 인정
         elif ex and ex > 0:
             day_cells.append(("✓", True, "exercise"))
-            count += 1
+            count += 1  # 운동은 해당 날 1회만 인정
         else:
             day_cells.append(("", False, None))
     table_rows.append((row_label, day_cells, count))
