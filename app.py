@@ -240,7 +240,6 @@ BIBLE_TEXT = "#0D0D0D"
 is_friday = today.weekday() == 4
 body_rows = []
 for row_label, day_cells, count in table_rows:
-    # 금요일이고 주 3회 미만이면 이름 셀만 연한 빨강으로 표시
     is_under_3 = is_friday and count < 3
 
     name_cell_style = "padding:6px 10px; border:1px solid #ddd; font-weight:bold;"
@@ -259,7 +258,12 @@ for row_label, day_cells, count in table_rows:
             )
         else:
             cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
-    cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; text-align:center;">{count}회</td>')
+
+    remarks_style = "padding:6px 10px; border:1px solid #ddd; text-align:center;"
+    if is_under_3:
+        remarks_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
+    cells.append(f'<td style="{remarks_style}">{count}회</td>')
+
     body_rows.append("<tr>" + "".join(cells) + "</tr>")
 
 week_table_html = (
