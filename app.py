@@ -58,7 +58,7 @@ NAME_ID_LIST = [
 ]
 ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
-ROW_HIGHLIGHT_UNDER_3 = "#FFB3B3"
+ROW_HIGHLIGHT_UNDER_3 = "#FFD8D8"  # 금요일 3회 미만 색상
 CHECK_GREEN = "#90EE90"
 
 _TITLE_ALIASES = {}
@@ -240,9 +240,14 @@ BIBLE_TEXT = "#0D0D0D"
 is_friday = today.weekday() == 4
 body_rows = []
 for row_label, day_cells, count in table_rows:
-    row_bg = (ROW_HIGHLIGHT_UNDER_3 if count < 3 else "") if is_friday else ""
-    tr_style = f"background-color:{row_bg};" if row_bg else ""
-    cells = [f'<td style="padding:6px 10px; border:1px solid #ddd; font-weight:bold;">{row_label}</td>']
+    # 금요일이고 주 3회 미만이면 이름 셀만 연한 빨강으로 표시
+    is_under_3 = is_friday and count < 3
+
+    name_cell_style = "padding:6px 10px; border:1px solid #ddd; font-weight:bold;"
+    if is_under_3:
+        name_cell_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
+
+    cells = [f'<td style="{name_cell_style}">{row_label}</td>']
     for val, checked, cell_type in day_cells:
         if checked and cell_type == "bible":
             cells.append(
@@ -255,7 +260,7 @@ for row_label, day_cells, count in table_rows:
         else:
             cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
     cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd; text-align:center;">{count}회</td>')
-    body_rows.append(f'<tr style="{tr_style}">' + "".join(cells) + "</tr>")
+    body_rows.append("<tr>" + "".join(cells) + "</tr>")
 
 week_table_html = (
     '<div class="center-data week-table-wrap">'
@@ -263,7 +268,7 @@ week_table_html = (
     f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 (아이디)</th>{header_cells}</tr></thead>'
     "<tbody>" + "".join(body_rows) + "</tbody>"
     "</table>"
-    '<p style="margin-top:8px; font-size:12px; color:#666;">하루에 여러 번 올려도 1회로 인정합니다. 제목에 "필사"가 있으면 성경필사로 분류해 노란 배경에 "성경필사" 표시. 금요일 기준 주 3회 미만 시 해당 행을 연한 빨간색으로 표시합니다.</p>'
+    '<p style="margin-top:8px; font-size:12px; color:#666;">하루에 여러 번 올려도 1회로 인정합니다. 제목에 "필사"가 있으면 성경필사로 분류해 노란 배경에 "성경필사" 표시. 금요일 기준 주 3회 미만 시 해당 인원의 이름 셀을 연한 빨간색(#FFD8D8)으로 표시합니다.</p>'
     "</div>"
 )
 st.markdown(week_table_html, unsafe_allow_html=True)
