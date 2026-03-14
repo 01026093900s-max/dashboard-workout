@@ -33,9 +33,11 @@ st.markdown("""
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
     .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
-    /* 탭: 비선택 #000000 Bold, 선택 시 #90ee90 Bold 700, 밑줄 4px */
-    [data-testid="stTabs"] [role="tab"], [data-testid="stTabs"] button { font-weight: 700 !important; color: #000000 !important; }
-    [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #90ee90 !important; font-weight: 700 !important; border-bottom: 4px solid #90ee90 !important; }
+    /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 (초록/빨강 제거) */
+    [data-testid="stTabs"] [role="tab"], [data-testid="stTabs"] button { font-weight: 700 !important; color: #646464 !important; border-bottom: none !important; }
+    [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #000000 !important; font-weight: 700 !important; border-bottom: 4px solid #000000 !important; border-bottom-color: #000000 !important; box-shadow: none !important; background: transparent !important; }
+    [data-testid="stTabs"] [role="tabpanel"] { border: none !important; }
+    [data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"] { background: transparent !important; border: none !important; border-bottom: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
