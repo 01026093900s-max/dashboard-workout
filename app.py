@@ -32,7 +32,10 @@ st.markdown("""
     .top3-1 { background: #D4AF37; color: #FFFFFF; }
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
-    .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; }
+    .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
+    /* 탭 라벨: Bold, 색상 #000000 */
+    [data-testid="stTabs"] [role="tab"] { font-weight: 700 !important; color: #000000 !important; }
+    [data-testid="stTabs"] button { font-weight: 700 !important; color: #000000 !important; }
 </style>
 """, unsafe_allow_html=True)
 
