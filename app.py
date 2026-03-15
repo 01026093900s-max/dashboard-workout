@@ -33,7 +33,7 @@ st.markdown("""
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
     .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
-    /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 (초록/빨강 제거) */
+    /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 */
     [data-testid="stTabs"] [role="tab"], [data-testid="stTabs"] button { font-weight: 700 !important; color: #646464 !important; border-bottom: none !important; }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #000000 !important; font-weight: 700 !important; border-bottom: 4px solid #000000 !important; border-bottom-color: #000000 !important; box-shadow: none !important; background: transparent !important; }
     [data-testid="stTabs"] [role="tabpanel"] { border: none !important; }
@@ -227,7 +227,8 @@ def _fmt_date(d):
     return f"{d.month}/{d.day}({WEEKDAY_NAMES[d.weekday()]})"
 
 
-def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=False):
+def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=False, highlight_under_3_always=False):
+    """테이블 HTML 생성. apply_red_highlight=True면 금·토에 3회 미만 이름·비고 빨강. highlight_under_3_always=True면 지난 기록에서도 3회 미만 빨강 유지."""
     header_cells = "".join(
         f'<th style="padding:6px 10px; border:1px solid #ddd;">{_fmt_date(d)}</th>' for d in week_dates_arg
     )
@@ -237,7 +238,7 @@ def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=
     is_red_window = apply_red_highlight and today.weekday() in (4, 5)
     body_rows = []
     for row_label, day_cells, count in table_rows_arg:
-        is_under_3 = is_red_window and count < 3
+        is_under_3 = (highlight_under_3_always and count < 3) or (is_red_window and count < 3)
         name_cell_style = "padding:6px 10px; border:1px solid #ddd; font-weight:bold;"
         if is_under_3:
             name_cell_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
@@ -310,7 +311,7 @@ with tab_weekly:
         st.caption("이번 주 인증 데이터가 없습니다.")
 
 with tab_archive:
-    st.caption("지난 주간 운동 인증 기록입니다. 조회만 가능하며 수정할 수 없습니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
+    st.caption("지난 주간 운동 인증 기록입니다. 로컬 서버에서 수정·추가 후 데이터 가져오기(push)로 Streamlit에 배포됩니다. 조회 전용이며, 해당 주에 주 3회 미만이었던 인원은 이름·비고란을 연한 빨간색으로 표시합니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
     if not archive:
         st.info("아직 아카이브된 주간 기록이 없습니다.")
     else:
@@ -327,10 +328,10 @@ with tab_archive:
             except Exception:
                 sun_d = week_sun
             week_dates_arch = [sun_d + timedelta(days=i) for i in range(7)]
-            table_html = _render_week_table_html(rows_restored, week_dates_arch, apply_red_highlight=False)
+            table_html = _render_week_table_html(rows_restored, week_dates_arch, apply_red_highlight=False, highlight_under_3_always=True)
             with st.expander(f"📅 {period_label}", expanded=False):
                 st.markdown(table_html, unsafe_allow_html=True)
                 st.caption("(해당 주간 스냅샷 · 수정 불가)")
 
 st.markdown("---")
-st.caption("이 페이지는 읽기 전용입니다. 데이터는 관리자가 주기적으로 업데이트합니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
+st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하며, 데이터 가져오기(push) 시 Streamlit에 반영됩니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
