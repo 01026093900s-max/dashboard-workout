@@ -99,6 +99,12 @@ def _parse_naver_date(date_str: str):
             return dt
         except ValueError:
             continue
+    m = re.match(r"^(\d{4})\.(\d{1,2})\.(\d{1,2})", date_str)
+    if m:
+        try:
+            return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            pass
     return None
 
 
@@ -125,6 +131,62 @@ def _author_from_row(r):
     if best_match:
         return best_match
     return author
+
+
+def _is_bible_copy(row):
+    title = (row.get("제목") or "").strip()
+    return "필사" in title
+
+
+def _table_rows_for_week_range(rows, week_sun, week_sat):
+    """지난주·이번주 공통: rows 전체에서 해당 일~토만 집계 (data.json의 옛 아카이브 스냅샷 대신 사용)."""
+    week_dates_w = [week_sun + timedelta(days=i) for i in range(7)]
+    posted = {}
+    for r in rows or []:
+        if not isinstance(r, dict):
+            continue
+        author = _author_from_row(r)
+        date_str = (r.get("날짜") or "").strip()
+        dt = _parse_naver_date(date_str) if date_str else None
+        if dt is None:
+            continue
+        d = dt.date()
+        if d < week_sun or d > week_dates_w[-1]:
+            continue
+        is_bible = _is_bible_copy(r)
+        for name, cid in NAME_ID_LIST:
+            if not cid:
+                continue
+            if author == cid or (author and author.strip().upper() == cid.strip().upper()):
+                key = (name, d)
+                if key not in posted:
+                    posted[key] = {"exercise": 0, "bible": False}
+                if is_bible:
+                    posted[key]["bible"] = True
+                else:
+                    posted[key]["exercise"] = 1
+                break
+    table_rows = []
+    for name, cid in NAME_ID_LIST:
+        row_label = f"{name} ({cid})"
+        count = 0
+        day_cells = []
+        for d in week_dates_w:
+            info = posted.get((name, d))
+            if not info:
+                day_cells.append(("", False, None))
+                continue
+            ex, bible = info.get("exercise", 0), info.get("bible", False)
+            if bible:
+                day_cells.append(("성경필사", True, "bible"))
+                count += 1
+            elif ex and ex > 0:
+                day_cells.append(("✓", True, "exercise"))
+                count += 1
+            else:
+                day_cells.append(("", False, None))
+        table_rows.append((row_label, day_cells, count))
+    return table_rows
 
 
 DATA_JSON_REMOTE_URL = os.environ.get(
@@ -197,64 +259,8 @@ week_sat = week_sun + timedelta(days=6)
 week_dates = [week_sun + timedelta(days=i) for i in range(7)]
 period_str = f"이번 주 기간: {week_sun.month}월 {week_sun.day}일 ({WEEKDAY_NAMES[week_sun.weekday()]}) ~ {week_sat.month}월 {week_sat.day}일 ({WEEKDAY_NAMES[week_sat.weekday()]})"
 
-# (실명, 날짜) -> {'exercise': 0/1, 'bible': 성경필사 여부}
-posted = {}
-
-
-def _is_bible_copy(row):
-    """제목에 '필사' 키워드가 있으면 성경필사로 분류 (예: 1주차 보충필사, 성경 필사)."""
-    title = (row.get("제목") or "").strip()
-    return "필사" in title
-
-
-for r in cafe_rows:
-    if not isinstance(r, dict):
-        continue
-    author = _author_from_row(r)
-    date_str = (r.get("날짜") or "").strip()
-    dt = _parse_naver_date(date_str) if date_str else None
-    if dt is None:
-        continue
-    d = dt.date()
-    if d < week_sun or d > week_dates[-1]:
-        continue
-    is_bible = _is_bible_copy(r)
-    for name, cid in NAME_ID_LIST:
-        if not cid:
-            continue
-        if author == cid or (author and author.strip().upper() == cid.strip().upper()):
-            key = (name, d)
-            if key not in posted:
-                posted[key] = {"exercise": 0, "bible": False}
-            if is_bible:
-                posted[key]["bible"] = True
-            else:
-                # 같은 날 여러 번 올려도 1회만 운동으로 인정
-                posted[key]["exercise"] = 1
-            break
-
-# 표 데이터: 행 = 실명 (아이디), 열 = 일~토 날짜 + 비고
-# 셀: 성경필사 → 노란 배경 '성경필사' / 운동 → 연두색 ✓ / 없음
-table_rows = []
-for name, cid in NAME_ID_LIST:
-    row_label = f"{name} ({cid})"
-    count = 0
-    day_cells = []
-    for d in week_dates:
-        info = posted.get((name, d))
-        if not info:
-            day_cells.append(("", False, None))  # (표시텍스트, 채움여부, 타입: None/'exercise'/'bible')
-            continue
-        ex, bible = info.get("exercise", 0), info.get("bible", False)
-        if bible:
-            day_cells.append(("성경필사", True, "bible"))
-            count += 1  # 성경필사는 해당 날 1회로 인정
-        elif ex and ex > 0:
-            day_cells.append(("✓", True, "exercise"))
-            count += 1  # 운동은 해당 날 1회만 인정
-        else:
-            day_cells.append(("", False, None))
-    table_rows.append((row_label, day_cells, count))
+# 표 데이터: rows 전체에서 이번 주만 집계 (지난 주 탭도 동일 로직으로 재계산)
+table_rows = _table_rows_for_week_range(cafe_rows, week_sun, week_sat)
 
 
 def _fmt_date(d):
@@ -352,20 +358,17 @@ with tab_archive:
         for entry in reversed(archive):
             week_sun_s = entry.get("week_sun") or ""
             period_label = entry.get("period_label") or f"{week_sun_s} 주간"
-            ser = entry.get("table_rows") or []
-            rows_restored = []
-            for row_label, cells, count in ser:
-                day_cells = [(v, bool(c), (t if t else None)) for v, c, t in cells]
-                rows_restored.append((row_label, day_cells, count))
             try:
                 sun_d = datetime.strptime(week_sun_s, "%Y-%m-%d").date()
             except Exception:
                 sun_d = week_sun
+            sat_d = sun_d + timedelta(days=6)
             week_dates_arch = [sun_d + timedelta(days=i) for i in range(7)]
-            table_html = _render_week_table_html(rows_restored, week_dates_arch, apply_red_highlight=False, highlight_under_3_always=True)
+            rows_live = _table_rows_for_week_range(cafe_rows, sun_d, sat_d)
+            table_html = _render_week_table_html(rows_live, week_dates_arch, apply_red_highlight=False, highlight_under_3_always=True)
             with st.expander(f"📅 {period_label}", expanded=False):
                 st.markdown(table_html, unsafe_allow_html=True)
-                st.caption("(해당 주간 스냅샷 · 수정 불가)")
+                st.caption("(data.json의 rows 기준으로 매번 다시 계산 · 조회 전용)")
 
 st.markdown("---")
 st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하며, 데이터 가져오기(push) 시 Streamlit에 반영됩니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
