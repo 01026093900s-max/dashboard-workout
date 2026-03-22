@@ -7,6 +7,8 @@ Hugging Face Spaces 또는 Streamlit Cloud에 배포 가능.
 import json
 import os
 import re
+
+import requests
 import streamlit as st
 from datetime import datetime, timedelta
 from collections import OrderedDict
@@ -33,7 +35,7 @@ st.markdown("""
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
     .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
-    /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 */
+    /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 (초록/빨강 제거) */
     [data-testid="stTabs"] [role="tab"], [data-testid="stTabs"] button { font-weight: 700 !important; color: #646464 !important; border-bottom: none !important; }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #000000 !important; font-weight: 700 !important; border-bottom: 4px solid #000000 !important; border-bottom-color: #000000 !important; box-shadow: none !important; background: transparent !important; }
     [data-testid="stTabs"] [role="tabpanel"] { border: none !important; }
@@ -102,6 +104,7 @@ def _parse_naver_date(date_str: str):
 
 def _author_from_row(r):
     author = (r.get("작성자") or "").strip()
+    # 작성자-아이디 매칭 시 대소문자 무시 (예: TimYou → TIMYOU)
     if author:
         for _, cid in NAME_ID_LIST:
             if cid and (author == cid or author.strip().upper() == cid.strip().upper()):
@@ -124,17 +127,21 @@ def _author_from_row(r):
     return author
 
 
-def _load_data():
-    """data.json 파일에서 크롤링 데이터와 아카이브를 읽는다."""
-    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
-    if not os.path.isfile(data_path):
-        return [], "", []
-    try:
-        with open(data_path, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-    except Exception:
-        return [], "", []
+DATA_JSON_REMOTE_URL = os.environ.get(
+    "DATA_JSON_REMOTE_URL",
+    "https://raw.githubusercontent.com/01026093900s-max/dashboard-workout/main/data.json",
+)
 
+
+@st.cache_data(ttl=45, show_spinner="최신 데이터를 불러오는 중…")
+def _fetch_remote_data_json(url: str):
+    """Streamlit Cloud에서 배포 시점의 옛 data.json이 남는 문제를 피하기 위해 GitHub raw에서 주기적으로 읽는다."""
+    r = requests.get(url, timeout=25, headers={"Cache-Control": "no-cache"})
+    r.raise_for_status()
+    return r.json()
+
+
+def _parse_data_payload(payload):
     if isinstance(payload, list):
         return payload, "", []
     if isinstance(payload, dict):
@@ -143,6 +150,28 @@ def _load_data():
         archive = payload.get("archive", [])
         return rows, updated, archive
     return [], "", []
+
+
+def _load_data():
+    """원격(GitHub raw) 우선, 실패 시 로컴 data.json. 로컴만 쓰려면 FORCE_LOCAL_DATA_JSON=1."""
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+    force_local = os.environ.get("FORCE_LOCAL_DATA_JSON", "").lower() in ("1", "true", "yes")
+
+    if not force_local:
+        try:
+            payload = _fetch_remote_data_json(DATA_JSON_REMOTE_URL)
+            return _parse_data_payload(payload)
+        except Exception:
+            pass
+
+    if not os.path.isfile(data_path):
+        return [], "", []
+    try:
+        with open(data_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception:
+        return [], "", []
+    return _parse_data_payload(payload)
 
 
 # ── 메인 ──
@@ -168,10 +197,12 @@ week_sat = week_sun + timedelta(days=6)
 week_dates = [week_sun + timedelta(days=i) for i in range(7)]
 period_str = f"이번 주 기간: {week_sun.month}월 {week_sun.day}일 ({WEEKDAY_NAMES[week_sun.weekday()]}) ~ {week_sat.month}월 {week_sat.day}일 ({WEEKDAY_NAMES[week_sat.weekday()]})"
 
+# (실명, 날짜) -> {'exercise': 0/1, 'bible': 성경필사 여부}
 posted = {}
 
 
 def _is_bible_copy(row):
+    """제목에 '필사' 키워드가 있으면 성경필사로 분류 (예: 1주차 보충필사, 성경 필사)."""
     title = (row.get("제목") or "").strip()
     return "필사" in title
 
@@ -198,9 +229,12 @@ for r in cafe_rows:
             if is_bible:
                 posted[key]["bible"] = True
             else:
+                # 같은 날 여러 번 올려도 1회만 운동으로 인정
                 posted[key]["exercise"] = 1
             break
 
+# 표 데이터: 행 = 실명 (아이디), 열 = 일~토 날짜 + 비고
+# 셀: 성경필사 → 노란 배경 '성경필사' / 운동 → 연두색 ✓ / 없음
 table_rows = []
 for name, cid in NAME_ID_LIST:
     row_label = f"{name} ({cid})"
@@ -209,15 +243,15 @@ for name, cid in NAME_ID_LIST:
     for d in week_dates:
         info = posted.get((name, d))
         if not info:
-            day_cells.append(("", False, None))
+            day_cells.append(("", False, None))  # (표시텍스트, 채움여부, 타입: None/'exercise'/'bible')
             continue
         ex, bible = info.get("exercise", 0), info.get("bible", False)
         if bible:
             day_cells.append(("성경필사", True, "bible"))
-            count += 1
+            count += 1  # 성경필사는 해당 날 1회로 인정
         elif ex and ex > 0:
             day_cells.append(("✓", True, "exercise"))
-            count += 1
+            count += 1  # 운동은 해당 날 1회만 인정
         else:
             day_cells.append(("", False, None))
     table_rows.append((row_label, day_cells, count))
