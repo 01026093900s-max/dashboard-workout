@@ -189,6 +189,47 @@ def _table_rows_for_week_range(rows, week_sun, week_sat):
     return table_rows
 
 
+def _deserialize_archive_table_rows(ser):
+    """data.json archive 안의 table_rows 직렬화 형식 → (row_label, day_cells, count) 리스트."""
+    out = []
+    for row in ser or []:
+        if not isinstance(row, (list, tuple)) or len(row) < 3:
+            continue
+        row_label, cells, count = row[0], row[1], row[2]
+        day_cells = [(v, bool(c), (t if t else None)) for v, c, t in cells]
+        out.append((row_label, day_cells, count))
+    return out
+
+
+def _merge_live_and_snapshot_week(rows_live, snap_deserialized):
+    """지난 주 탭: rows로 다시 계산한 표 + 예전에 저장된 스냅샷을 칸 단위 OR 병합.
+    rows에 과거 글이 잘려 나가도 스냅샷에 있던 ✓는 유지되고, 새로 크롤된 글도 반영된다."""
+    if not snap_deserialized:
+        return rows_live
+    snap_by_label = {r[0]: r for r in snap_deserialized}
+    merged = []
+    for row_label, live_cells, _ in rows_live:
+        snap_row = snap_by_label.get(row_label)
+        if not snap_row:
+            cnt = sum(1 for _, c, _ in live_cells if c)
+            merged.append((row_label, live_cells, cnt))
+            continue
+        _, snap_cells, _ = snap_row
+        mcells = []
+        for i in range(7):
+            lv, lc, lt = live_cells[i] if i < len(live_cells) else ("", False, None)
+            sv, sc, st = snap_cells[i] if i < len(snap_cells) else ("", False, None)
+            if lc:
+                mcells.append((lv, lc, lt))
+            elif sc:
+                mcells.append((sv, sc, st))
+            else:
+                mcells.append(("", False, None))
+        cnt = sum(1 for _, c, _ in mcells if c)
+        merged.append((row_label, mcells, cnt))
+    return merged
+
+
 DATA_JSON_REMOTE_URL = os.environ.get(
     "DATA_JSON_REMOTE_URL",
     "https://raw.githubusercontent.com/01026093900s-max/dashboard-workout/main/data.json",
@@ -365,10 +406,13 @@ with tab_archive:
             sat_d = sun_d + timedelta(days=6)
             week_dates_arch = [sun_d + timedelta(days=i) for i in range(7)]
             rows_live = _table_rows_for_week_range(cafe_rows, sun_d, sat_d)
-            table_html = _render_week_table_html(rows_live, week_dates_arch, apply_red_highlight=False, highlight_under_3_always=True)
+            ser = entry.get("table_rows") or []
+            snap = _deserialize_archive_table_rows(ser)
+            rows_show = _merge_live_and_snapshot_week(rows_live, snap)
+            table_html = _render_week_table_html(rows_show, week_dates_arch, apply_red_highlight=False, highlight_under_3_always=True)
             with st.expander(f"📅 {period_label}", expanded=False):
                 st.markdown(table_html, unsafe_allow_html=True)
-                st.caption("(data.json의 rows 기준으로 매번 다시 계산 · 조회 전용)")
+                st.caption("(최신 크롤 rows + 저장된 주간 스냅샷을 합쳐 표시 · 조회 전용)")
 
 st.markdown("---")
-st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하며, 데이터 가져오기(push) 시 Streamlit에 반영됩니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
+st.capti
