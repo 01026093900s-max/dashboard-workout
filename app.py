@@ -68,6 +68,20 @@ WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
 ROW_HIGHLIGHT_UNDER_3 = "#FFB3B3"
 CHECK_GREEN = "#90EE90"
 
+# archive/table_rows 등에 남아있던 과거 cid를 현재 cid로 정규화
+CID_LEGACY_TO_CURRENT = {
+    "김보람아님": "민찬이",
+}
+
+
+def _normalize_row_label(row_label):
+    if not isinstance(row_label, str):
+        return row_label
+    out = row_label
+    for old_cid, new_cid in CID_LEGACY_TO_CURRENT.items():
+        out = out.replace(f"({old_cid})", f"({new_cid})")
+    return out
+
 _TITLE_ALIASES = {}
 for _n, _c in NAME_ID_LIST:
     _TITLE_ALIASES[_c.lower()] = _c
@@ -76,8 +90,10 @@ for _n, _c in NAME_ID_LIST:
         _TITLE_ALIASES[_n[1:]] = _c
 _TITLE_ALIASES.update({
     "콜드가우": "콜드카우",
-    "민찬": "김보람아님",
-    "민찬이": "김보람아님",
+    "민찬": "민찬이",
+    "민찬이": "민찬이",
+    # 과거 데이터(김보람아님) 호환
+    "김보람아님": "민찬이",
     "베이비러너": "Sue",
     "오수완": "프수",
     "수완": "프수",
@@ -115,6 +131,12 @@ def _author_from_row(r):
         for _, cid in NAME_ID_LIST:
             if cid and (author == cid or author.strip().upper() == cid.strip().upper()):
                 return cid
+        # 작성자 필드 자체가 과거 cid(예: 김보람아님)로 들어오는 경우 호환
+        author_lower = author.lower()
+        if author_lower in _TITLE_ALIASES:
+            return _TITLE_ALIASES[author_lower]
+        if author in _TITLE_ALIASES:
+            return _TITLE_ALIASES[author]
     title = (r.get("제목") or "").strip()
     title_lower = title.lower()
     best_match = None
@@ -168,7 +190,9 @@ def _table_rows_for_week_range(rows, week_sun, week_sat):
                 break
     table_rows = []
     for name, cid in NAME_ID_LIST:
-        row_label = f"{name} ({cid})"
+        # legacy cid(예: 김보람아님) 그대로 남아있는 배포본이 있어도
+        # 항상 현재 cid(예: 민찬이)로 표기되게 보정한다.
+        row_label = _normalize_row_label(f"{name} ({cid})")
         count = 0
         day_cells = []
         for d in week_dates_w:
@@ -196,38 +220,52 @@ def _deserialize_archive_table_rows(ser):
         if not isinstance(row, (list, tuple)) or len(row) < 3:
             continue
         row_label, cells, count = row[0], row[1], row[2]
+        row_label = _normalize_row_label(row_label)
         day_cells = [(v, bool(c), (t if t else None)) for v, c, t in cells]
         out.append((row_label, day_cells, count))
     return out
 
 
+def _or_merge_cell_fe(a, b):
+    va, ca, ta = a
+    vb, cb, tb = b
+    if not ca and not cb:
+        return ("", False, None)
+    if ca and not cb:
+        return (va, ca, ta)
+    if cb and not ca:
+        return (vb, cb, tb)
+    if ta == "bible" or tb == "bible":
+        return ("성경필사", True, "bible")
+    return (va or vb, True, ta or tb or "exercise")
+
+
+def _merge_two_week_tables_fe(rows_a, rows_b):
+    """두 주간 표를 이름·요일 칸 단위 OR (대칭)."""
+    by_label = {}
+    for lst in (rows_a or [], rows_b or []):
+        for row_label, cells, _ in lst:
+            row_label = _normalize_row_label(row_label)
+            if row_label not in by_label:
+                by_label[row_label] = [("", False, None)] * 7
+            cur = by_label[row_label]
+            for i in range(7):
+                v, c, t = cells[i] if i < len(cells) else ("", False, None)
+                cur[i] = _or_merge_cell_fe(cur[i], (v, c, t))
+    out = []
+    for name, cid in NAME_ID_LIST:
+        row_label = _normalize_row_label(f"{name} ({cid})")
+        cells = by_label.get(row_label, [("", False, None)] * 7)
+        cnt = sum(1 for _, c, _ in cells if c)
+        out.append((row_label, cells, cnt))
+    return out
+
+
 def _merge_live_and_snapshot_week(rows_live, snap_deserialized):
-    """지난 주 탭: rows로 다시 계산한 표 + 예전에 저장된 스냅샷을 칸 단위 OR 병합.
-    rows에 과거 글이 잘려 나가도 스냅샷에 있던 ✓는 유지되고, 새로 크롤된 글도 반영된다."""
+    """지난 주 탭: rows 집계 + 저장 스냅샷을 대칭 OR 병합(한쪽만 비어 있어도 다른 쪽 체크 유지)."""
     if not snap_deserialized:
         return rows_live
-    snap_by_label = {r[0]: r for r in snap_deserialized}
-    merged = []
-    for row_label, live_cells, _ in rows_live:
-        snap_row = snap_by_label.get(row_label)
-        if not snap_row:
-            cnt = sum(1 for _, c, _ in live_cells if c)
-            merged.append((row_label, live_cells, cnt))
-            continue
-        _, snap_cells, _ = snap_row
-        mcells = []
-        for i in range(7):
-            lv, lc, lt = live_cells[i] if i < len(live_cells) else ("", False, None)
-            sv, sc, st = snap_cells[i] if i < len(snap_cells) else ("", False, None)
-            if lc:
-                mcells.append((lv, lc, lt))
-            elif sc:
-                mcells.append((sv, sc, st))
-            else:
-                mcells.append(("", False, None))
-        cnt = sum(1 for _, c, _ in mcells if c)
-        merged.append((row_label, mcells, cnt))
-    return merged
+    return _merge_two_week_tables_fe(rows_live, snap_deserialized)
 
 
 DATA_JSON_REMOTE_URL = os.environ.get(
@@ -236,9 +274,9 @@ DATA_JSON_REMOTE_URL = os.environ.get(
 )
 
 
-@st.cache_data(ttl=45, show_spinner="최신 데이터를 불러오는 중…")
 def _fetch_remote_data_json(url: str):
-    """Streamlit Cloud에서 배포 시점의 옛 data.json이 남는 문제를 피하기 위해 GitHub raw에서 주기적으로 읽는다."""
+    """Streamlit Cloud에서 배포 시점의 옛 data.json이 남는 문제를 피하기 위해
+    GitHub raw에서 요청 시마다 읽는다."""
     r = requests.get(url, timeout=25, headers={"Cache-Control": "no-cache"})
     r.raise_for_status()
     return r.json()
@@ -415,4 +453,4 @@ with tab_archive:
                 st.caption("(최신 크롤 rows + 저장된 주간 스냅샷을 합쳐 표시 · 조회 전용)")
 
 st.markdown("---")
-st.capti
+st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하며, 데이터 가져오기(push) 시 Streamlit에 반영됩니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
