@@ -8,6 +8,7 @@ import json
 import os
 import re
 
+import plotly.graph_objects as go
 import requests
 import streamlit as st
 from datetime import datetime, timedelta
@@ -35,6 +36,22 @@ st.markdown("""
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
     .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
+    .avg-bar-title-main { font-size: 1.35rem; font-weight: 700; color: #000; margin-bottom: 0.35rem; }
+    .avg-bar-title-sub { font-size: 1rem; color: #000; margin-bottom: 0.25rem; line-height: 1.4; }
+    .avg-bar-title-note { font-size: 0.8rem; color: #888888; line-height: 1.35; margin-bottom: 0.75rem; }
+    .avg-bar-chart-section-marker { display: none !important; }
+    [data-testid="stMarkdown"]:has(.avg-bar-chart-section-marker) + div [data-testid="stPlotlyChart"] iframe {
+        border-radius: 12px !important;
+        border: 1px solid #e8e8e8 !important;
+        box-sizing: border-box;
+    }
+    @keyframes plotly-today-pulse {
+        0%, 100% { opacity: 1; stroke-width: 3px; }
+        50% { opacity: 0.28; stroke-width: 10px; }
+    }
+    .js-plotly-plot .scatterlayer > g:nth-child(3) path {
+        animation: plotly-today-pulse 1.35s ease-in-out infinite;
+    }
     /* 탭: 선택 #000000 Bold 700, 비선택 #646464 Bold 700, 선택 탭 밑줄 4px #000000만 (초록/빨강 제거) */
     [data-testid="stTabs"] [role="tab"], [data-testid="stTabs"] button { font-weight: 700 !important; color: #646464 !important; border-bottom: none !important; }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #000000 !important; font-weight: 700 !important; border-bottom: 4px solid #000000 !important; border-bottom-color: #000000 !important; box-shadow: none !important; background: transparent !important; }
@@ -65,6 +82,7 @@ NAME_ID_LIST = [
 ]
 ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
+_DAY_LONG_KR = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
 ROW_HIGHLIGHT_UNDER_3 = "#FFB3B3"
 CHECK_GREEN = "#90EE90"
 
@@ -268,15 +286,153 @@ def _merge_live_and_snapshot_week(rows_live, snap_deserialized):
     return _merge_two_week_tables_fe(rows_live, snap_deserialized)
 
 
+def _daily_cert_counts_for_week_readonly(rows, week_sun, week_sat):
+    tr = _table_rows_for_week_range(rows, week_sun, week_sat)
+    totals = [0] * 7
+    for _rl, day_cells, _ in tr:
+        for j in range(7):
+            if j < len(day_cells):
+                _v, checked, _t = day_cells[j]
+                if checked:
+                    totals[j] += 1
+    return totals
+
+
+def _fig_realtime_exercise_lines(rows, week_sun, today_d):
+    prev_sun = week_sun - timedelta(days=7)
+    prev_sat = prev_sun + timedelta(days=6)
+    week_dates = [week_sun + timedelta(days=i) for i in range(7)]
+    prev_dates = [prev_sun + timedelta(days=i) for i in range(7)]
+    y_last = _daily_cert_counts_for_week_readonly(rows, prev_sun, prev_sat)
+    y_this = _daily_cert_counts_for_week_readonly(rows, week_sun, week_sun + timedelta(days=6))
+    x_cat = [WEEKDAY_NAMES[d.weekday()] for d in week_dates]
+    hover_last = [f"{_DAY_LONG_KR[d.weekday()]} 운동인증: {y_last[i]}회" for i, d in enumerate(prev_dates)]
+    y_this_plot = []
+    hover_this = []
+    for i, d in enumerate(week_dates):
+        if d > today_d:
+            y_this_plot.append(None)
+            hover_this.append("")
+        else:
+            y_this_plot.append(y_this[i])
+            hover_this.append(f"{_DAY_LONG_KR[d.weekday()]} 운동인증: {y_this[i]}회")
+    all_y = list(y_last) + [v for v in y_this_plot if v is not None]
+    y_max = max(all_y) if all_y else 0
+    y_top = max(int(y_max * 1.15) + 1, 5)
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=x_cat,
+            y=y_last,
+            mode="lines+markers",
+            name="지난주",
+            line=dict(color="#9e9e9e", width=2),
+            marker=dict(size=10, color="#9e9e9e", line=dict(width=1, color="#ffffff")),
+            hoverinfo="text",
+            hovertext=hover_last,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_cat,
+            y=y_this_plot,
+            mode="lines+markers",
+            name="이번주",
+            line=dict(color="#2196F3", width=2),
+            marker=dict(size=10, color="#2196F3", line=dict(width=1, color="#ffffff")),
+            hoverinfo="text",
+            hovertext=[h if h else None for h in hover_this],
+            connectgaps=False,
+        )
+    )
+    x_today = (today_d - week_sun).days
+    if 0 <= x_today < 7 and week_dates[x_today] == today_d:
+        yt = y_this_plot[x_today]
+        if yt is not None:
+            fig.add_trace(
+                go.Scatter(
+                    x=[x_cat[x_today]],
+                    y=[yt],
+                    mode="markers",
+                    name="오늘",
+                    showlegend=False,
+                    marker=dict(
+                        size=24,
+                        color="rgba(33,150,243,0.22)",
+                        line=dict(width=3, color="#1976D2"),
+                    ),
+                    hoverinfo="text",
+                    hovertext=[hover_this[x_today]],
+                    legendgroup="today_pulse",
+                )
+            )
+    fig.update_layout(
+        title=dict(text="실시간 운동 인증 그래프", font=dict(size=18)),
+        xaxis_title="요일",
+        yaxis_title="인증 수 (명)",
+        yaxis=dict(range=[0, y_top]),
+        legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
+        margin=dict(t=80, b=48),
+        height=420,
+        hovermode="closest",
+    )
+    return fig
+
+
+def _fig_avg_week_mean_bars(rows, week_sun, today_d):
+    prev_sun = week_sun - timedelta(days=7)
+    y_last = _daily_cert_counts_for_week_readonly(rows, prev_sun, prev_sun + timedelta(days=6))
+    y_this = _daily_cert_counts_for_week_readonly(rows, week_sun, week_sun + timedelta(days=6))
+    this_vals = []
+    for i in range(7):
+        d = week_sun + timedelta(days=i)
+        if d <= today_d:
+            this_vals.append(y_this[i])
+    v_last = sum(y_last) / 7.0
+    v_this = sum(this_vals) / len(this_vals) if this_vals else 0.0
+    color_last = "#9E9E9E"
+    if v_this < v_last:
+        color_this = "#4E6FFF"
+    elif v_this > v_last:
+        color_this = "#FF5050"
+    else:
+        color_this = "#4E6FFF"
+    bar_marker = dict(color=[color_last, color_this], line=dict(width=0), cornerradius=12)
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=["지난주", "이번주"],
+                y=[v_last, v_this],
+                width=0.4,
+                marker=bar_marker,
+                text=[f"{v_last:.1f}", f"{v_this:.1f}"],
+                textposition="outside",
+                hovertemplate="%{x}<br>%{y:.1f}<extra></extra>",
+            )
+        ]
+    )
+    fig.update_layout(
+        showlegend=False,
+        height=360,
+        margin=dict(t=16, b=48, l=24, r=24),
+        yaxis=dict(range=[0, max(v_last, v_this, 1) * 1.28], showgrid=True, title=None),
+        xaxis=dict(title=None),
+        plot_bgcolor="#FAFAFA",
+        paper_bgcolor="#FFFFFF",
+    )
+    return fig
+
+
 DATA_JSON_REMOTE_URL = os.environ.get(
     "DATA_JSON_REMOTE_URL",
     "https://raw.githubusercontent.com/01026093900s-max/dashboard-workout/main/data.json",
 )
 
 
+@st.cache_data(ttl=45, show_spinner="최신 데이터를 불러오는 중…")
 def _fetch_remote_data_json(url: str):
     """Streamlit Cloud에서 배포 시점의 옛 data.json이 남는 문제를 피하기 위해
-    GitHub raw에서 요청 시마다 읽는다."""
+    GitHub raw에서 주기적으로 읽는다."""
     r = requests.get(url, timeout=25, headers={"Cache-Control": "no-cache"})
     r.raise_for_status()
     return r.json()
@@ -427,7 +583,31 @@ with tab_weekly:
                 unsafe_allow_html=True,
             )
     else:
-        st.caption("이번 주 인증 데이터가 없습니다.")
+        st.caption("이번 주 인증 데이터가 없습니다. (해당 주 일요일~토요일 기준)")
+
+    st.markdown("---")
+    st.subheader("주간 비교 그래프")
+    st.caption(
+        "실시간 운동 인증 그래프: 지난주(회색)와 이번주(파랑) 일별 인증 **명 수**를 비교합니다. "
+        "원에 마우스를 올리면 **해당 요일 운동인증 횟수**가 표시됩니다. 오늘 데이터 점은 외곽선이 깜빡입니다."
+    )
+    st.plotly_chart(
+        _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
+        use_container_width=True,
+        key="weekly_rt_line_public",
+    )
+    st.markdown(
+        '<div class="avg-bar-title-main">지난주 평균 운동 인증 그래프</div>'
+        '<div class="avg-bar-title-sub">지난주와 이번주의 평균 운동 인증량입니다.</div>'
+        '<div class="avg-bar-title-note">지난주 (일~토요일까지의 평균), 이번주 (일~현재까지의 평균)</div>'
+        '<div class="avg-bar-chart-section-marker" aria-hidden="true"></div>',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(
+        _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
+        use_container_width=True,
+        key="weekly_bar_mean_public",
+    )
 
 with tab_archive:
     st.caption("지난 주간 운동 인증 기록입니다. 로컬 서버에서 수정·추가 후 데이터 가져오기(push)로 Streamlit에 배포됩니다. 조회 전용이며, 해당 주에 주 3회 미만이었던 인원은 이름·비고란을 연한 빨간색으로 표시합니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
