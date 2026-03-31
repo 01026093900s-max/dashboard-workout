@@ -25,17 +25,40 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
     html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background: #ffffff; color: #000000; }
-    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 100%; }
-    h1 { color: #000000 !important; font-weight: 700 !important; border: none !important; font-size: 1.75rem !important; margin-bottom: 0.25rem !important; }
+    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1600px; }
+    h1 { color: #000000 !important; font-weight: 700 !important; border: none !important; font-size: 1.75rem !important; margin-bottom: 0 !important; }
     .main p { color: #333333; }
-    .center-data { width: 100%; max-width: 900px; margin-left: 0; margin-right: auto; }
+    .center-data { width: 100%; max-width: 1600px; margin-left: auto; margin-right: auto; }
     .week-table-wrap { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin: 0.5rem 0 1rem 0; }
     .week-table-wrap table { background: #ffffff; }
     .top3-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; margin-left: 8px; }
     .top3-1 { background: #D4AF37; color: #FFFFFF; }
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
-    .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
+    .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 18px; }
+    .kpi-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 16px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); min-height: 104px; }
+    .kpi-title { font-size: 0.95rem; color: #5b6475; font-weight: 600; margin-bottom: 10px; }
+    .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; color: #111827; }
+    .kpi-unit { font-size: 1rem; font-weight: 700; margin-left: 2px; color: #4b5563; }
+    .top3-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 14px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); width: 100%; box-sizing: border-box; overflow: hidden; }
+    .top3-item { padding: 10px 0; border-bottom: 1px solid #eceff4; }
+    .top3-item:last-child { border-bottom: none; }
+    .dashboard-top-gap { margin-top: 8px; margin-bottom: 12px; }
+    .graph-head { margin-top: 18px; margin-bottom: 0; }
+    .graph-head h3 { margin: 0; }
+    .graph-head p { margin: 0; font-size: 0.92rem; color: #667085; }
+    .arrow-wrap { margin-top: 14px; }
+    .arrow-wrap [data-testid="stButton"] > button {
+        background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;
+        min-height: 72px !important; width: 72px !important; height: 72px !important; color: #0D0D0D !important; line-height: 1 !important;
+    }
+    .arrow-wrap [data-testid="stButton"] > button p,
+    .arrow-wrap [data-testid="stButton"] > button span,
+    .arrow-wrap [data-testid="stButton"] > button div { margin: 0 !important; font-size: 72px !important; line-height: 1 !important; font-weight: 700 !important; }
+    .arrow-wrap [data-testid="stButton"] > button:disabled { color: #808080 !important; opacity: 1 !important; cursor: default !important; }
+    .arrow-wrap [data-testid="stButton"] > button:disabled p,
+    .arrow-wrap [data-testid="stButton"] > button:disabled span,
+    .arrow-wrap [data-testid="stButton"] > button:disabled div { color: #808080 !important; }
     .avg-bar-title-main { font-size: 1.35rem; font-weight: 700; color: #000; margin-bottom: 0.35rem; }
     .avg-bar-title-sub { font-size: 1rem; color: #000; margin-bottom: 0.25rem; line-height: 1.4; }
     .avg-bar-title-note { font-size: 0.8rem; color: #888888; line-height: 1.35; margin-bottom: 0.75rem; }
@@ -57,6 +80,16 @@ st.markdown("""
     [data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] button[aria-selected="true"] { color: #000000 !important; font-weight: 700 !important; border-bottom: 4px solid #000000 !important; border-bottom-color: #000000 !important; box-shadow: none !important; background: transparent !important; }
     [data-testid="stTabs"] [role="tabpanel"] { border: none !important; }
     [data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"] { background: transparent !important; border: none !important; border-bottom: none !important; }
+    @media (min-width: 797px) and (max-width: 1920px) {
+        .main .block-container { max-width: 1600px; padding-left: 32px; padding-right: 32px; }
+    }
+    @media (min-width: 360px) and (max-width: 796px) {
+        .main .block-container { max-width: 100%; padding-left: 14px; padding-right: 14px; }
+        h1 { font-size: 1.55rem !important; }
+        .kpi-value { font-size: 1.7rem; }
+        .dashboard-top-gap { margin-top: 4px; margin-bottom: 10px; }
+        .graph-head { margin-top: 12px; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,7 +117,7 @@ ID_TO_NAME = {tid: name for name, tid in NAME_ID_LIST}
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
 _DAY_LONG_KR = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
 ROW_HIGHLIGHT_UNDER_3 = "#FFB3B3"
-CHECK_GREEN = "#90EE90"
+CHECK_BLUE = "#4E6FFF"
 
 # archive/table_rows 등에 남아있던 과거 cid를 현재 cid로 정규화
 CID_LEGACY_TO_CURRENT = {
@@ -367,14 +400,16 @@ def _fig_realtime_exercise_lines(rows, week_sun, today_d):
                 )
             )
     fig.update_layout(
-        title=dict(text="실시간 운동 인증 그래프", font=dict(size=18)),
+        title=None,
         xaxis_title="요일",
         yaxis_title="인증 수 (명)",
         yaxis=dict(range=[0, y_top]),
         legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
-        margin=dict(t=80, b=48),
-        height=420,
+        margin=dict(t=24, b=48),
+        height=360,
         hovermode="closest",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     return fig
 
@@ -417,8 +452,8 @@ def _fig_avg_week_mean_bars(rows, week_sun, today_d):
         margin=dict(t=16, b=48, l=24, r=24),
         yaxis=dict(range=[0, max(v_last, v_this, 1) * 1.28], showgrid=True, title=None),
         xaxis=dict(title=None),
-        plot_bgcolor="#FAFAFA",
-        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     return fig
 
@@ -484,9 +519,6 @@ if not cafe_rows:
     st.info("데이터가 아직 업로드되지 않았습니다. data.json 파일을 추가해 주세요.")
     st.stop()
 
-# ── 탭: 주간 운동 인증 현황 / 지난 운동 인증 기록 ──
-tab_weekly, tab_archive = st.tabs(["주간 운동 인증 현황", "지난 운동 인증 기록"])
-
 today = datetime.now().date()
 days_since_sun = (today.weekday() + 1) % 7
 week_sun = today - timedelta(days=days_since_sun)
@@ -496,6 +528,90 @@ period_str = f"이번 주 기간: {week_sun.month}월 {week_sun.day}일 ({WEEKDA
 
 # 표 데이터: rows 전체에서 이번 주만 집계 (지난 주 탭도 동일 로직으로 재계산)
 table_rows = _table_rows_for_week_range(cafe_rows, week_sun, week_sat)
+this_week_total_certs = sum(r[2] for r in table_rows)
+under_three_count = sum(1 for r in table_rows if r[2] < 3)
+if "graph_view_mode" not in st.session_state:
+    st.session_state["graph_view_mode"] = "realtime"
+
+st.markdown('<div class="dashboard-top-gap"></div>', unsafe_allow_html=True)
+top_left, top_right = st.columns([1.75, 1.1], gap="medium")
+with top_left:
+    kpi_col1, kpi_col2 = st.columns(2, gap="medium")
+    with kpi_col1:
+        st.markdown(
+            f'<div class="kpi-card"><div class="kpi-title">이번주 총 인증글 수 (누적)</div>'
+            f'<div><span class="kpi-value">{this_week_total_certs}</span><span class="kpi-unit">회</span></div></div>',
+            unsafe_allow_html=True,
+        )
+    with kpi_col2:
+        st.markdown(
+            f'<div class="kpi-card"><div class="kpi-title">3회 이상 인증하지 않은 인원 수</div>'
+            f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span></div></div>',
+            unsafe_allow_html=True,
+        )
+    g_title_col, g_btn_col = st.columns([0.88, 0.12], gap="small")
+    with g_title_col:
+        if st.session_state["graph_view_mode"] == "realtime":
+            st.markdown(
+                '<div class="graph-head"><h3>실시간 운동 인증 그래프</h3><p>지난주와 이번주의 운동인증량을 실시간으로 비교합니다.</p></div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<div class="graph-head"><h3>지난주 평균 운동 인증 그래프</h3><p>지난주와 이번주의 평균 운동 인증량을 비교합니다.</p></div>',
+                unsafe_allow_html=True,
+            )
+    with g_btn_col:
+        st.markdown('<div class="arrow-wrap">', unsafe_allow_html=True)
+        pcol, ncol = st.columns(2, gap="small")
+        with pcol:
+            if st.button("‹", key="graph_prev_public", disabled=st.session_state["graph_view_mode"] == "realtime"):
+                st.session_state["graph_view_mode"] = "avg"
+                st.rerun()
+        with ncol:
+            if st.button("›", key="graph_next_public", disabled=st.session_state["graph_view_mode"] == "avg"):
+                st.session_state["graph_view_mode"] = "realtime"
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    if st.session_state["graph_view_mode"] == "realtime":
+        st.plotly_chart(
+            _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
+            width="stretch",
+            key="weekly_rt_line_public_top",
+        )
+    else:
+        st.plotly_chart(
+            _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
+            width="stretch",
+            key="weekly_bar_mean_public_top",
+        )
+
+with top_right:
+    top3_html = '<div class="top3-card"><h4 style="margin:0 0 8px 0;">이번주 Top3</h4>'
+    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
+    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
+    _groups = OrderedDict()
+    for label, cnt in top3_list:
+        _groups.setdefault(cnt, []).append(label)
+    ranked_groups = []
+    rank = 0
+    for cnt, labels in _groups.items():
+        rank += 1
+        if rank > 3:
+            break
+        ranked_groups.append((rank, labels, cnt))
+    if ranked_groups:
+        badge_class = ["top3-1", "top3-2", "top3-3"]
+        for r, labels, cnt in ranked_groups:
+            bc = badge_class[r - 1] if r <= 3 else "top3-3"
+            top3_html += f'<div class="top3-item"><b>{r}등</b> {", ".join(labels)} <span class="top3-badge {bc}">{cnt}회</span></div>'
+    else:
+        top3_html += '<div class="top3-item">이번 주 인증 데이터가 없습니다.</div>'
+    top3_html += "</div>"
+    st.markdown(top3_html, unsafe_allow_html=True)
+
+# ── 탭: 이번주 운동 인증 현황 / 지난 운동 인증 기록 ──
+tab_weekly, tab_archive = st.tabs(["이번주 운동 인증 현황", "지난 운동 인증 기록"])
 
 
 def _fmt_date(d):
@@ -525,7 +641,7 @@ def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=
                 )
             elif checked and cell_type == "exercise":
                 cells.append(
-                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">{val}</td>'
+                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_BLUE}; color:#FFFFFF; font-weight:700; text-align:center;">{val}</td>'
                 )
             else:
                 cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
@@ -536,7 +652,7 @@ def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=
         body_rows.append("<tr>" + "".join(cells) + "</tr>")
     return (
         '<div class="center-data week-table-wrap">'
-        '<table style="border-collapse:collapse; width:100%; max-width:900px; font-size:14px;">'
+        '<table style="border-collapse:collapse; width:100%; table-layout:fixed; font-size:14px;">'
         f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 (아이디)</th>{header_cells}</tr></thead>'
         "<tbody>" + "".join(body_rows) + "</tbody>"
         "</table></div>"
@@ -548,66 +664,6 @@ with tab_weekly:
     week_table_html = _render_week_table_html(table_rows, week_dates, apply_red_highlight=True)
     st.markdown(week_table_html, unsafe_allow_html=True)
     st.caption("하루에 여러 번 올려도 1회로 인정합니다. 금요일 00:00~토요일 23:59 구간에서 주 3회 미만 시 이름·비고란을 연한 빨간색으로 표시합니다.")
-
-    st.markdown("---")
-    st.subheader("이번주 인증 TOP3")
-    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
-    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
-
-    _groups = OrderedDict()
-    for label, cnt in top3_list:
-        _groups.setdefault(cnt, []).append(label)
-
-    ranked_groups = []
-    rank = 0
-    for cnt, labels in _groups.items():
-        rank += 1
-        if rank > 3:
-            break
-        ranked_groups.append((rank, labels, cnt))
-
-    if ranked_groups:
-        badge_class = ["top3-1", "top3-2", "top3-3"]
-        for r, labels, cnt in ranked_groups:
-            bc = badge_class[r - 1] if r <= 3 else "top3-3"
-            bold_labels = []
-            for lb in labels:
-                if " (" in lb:
-                    real_name, rest = lb.split(" (", 1)
-                    bold_labels.append(f"<b>{real_name}</b> ({rest}")
-                else:
-                    bold_labels.append(f"<b>{lb}</b>")
-            names_str = ", ".join(bold_labels)
-            st.markdown(
-                f'**{r}등** {names_str} <span class="top3-badge {bc}">{cnt}회</span>',
-                unsafe_allow_html=True,
-            )
-    else:
-        st.caption("이번 주 인증 데이터가 없습니다. (해당 주 일요일~토요일 기준)")
-
-    st.markdown("---")
-    st.subheader("주간 비교 그래프")
-    st.caption(
-        "실시간 운동 인증 그래프: 지난주(회색)와 이번주(파랑) 일별 인증 **명 수**를 비교합니다. "
-        "원에 마우스를 올리면 **해당 요일 운동인증 횟수**가 표시됩니다. 오늘 데이터 점은 외곽선이 깜빡입니다."
-    )
-    st.plotly_chart(
-        _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
-        use_container_width=True,
-        key="weekly_rt_line_public",
-    )
-    st.markdown(
-        '<div class="avg-bar-title-main">지난주 평균 운동 인증 그래프</div>'
-        '<div class="avg-bar-title-sub">지난주와 이번주의 평균 운동 인증량입니다.</div>'
-        '<div class="avg-bar-title-note">지난주 (일~토요일까지의 평균), 이번주 (일~현재까지의 평균)</div>'
-        '<div class="avg-bar-chart-section-marker" aria-hidden="true"></div>',
-        unsafe_allow_html=True,
-    )
-    st.plotly_chart(
-        _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
-        use_container_width=True,
-        key="weekly_bar_mean_public",
-    )
 
 with tab_archive:
     st.caption("지난 주간 운동 인증 기록입니다. 로컬 서버에서 수정·추가 후 데이터 가져오기(push)로 Streamlit에 배포됩니다. 조회 전용이며, 해당 주에 주 3회 미만이었던 인원은 이름·비고란을 연한 빨간색으로 표시합니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
