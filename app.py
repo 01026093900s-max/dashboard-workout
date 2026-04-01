@@ -566,11 +566,11 @@ with top_left:
         pcol, ncol = st.columns(2, gap="small")
         with pcol:
             if st.button("‹", key="graph_prev_public", disabled=st.session_state["graph_view_mode"] == "realtime"):
-                st.session_state["graph_view_mode"] = "avg"
+                st.session_state["graph_view_mode"] = "realtime"
                 st.rerun()
         with ncol:
             if st.button("›", key="graph_next_public", disabled=st.session_state["graph_view_mode"] == "avg"):
-                st.session_state["graph_view_mode"] = "realtime"
+                st.session_state["graph_view_mode"] = "avg"
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
     if st.session_state["graph_view_mode"] == "realtime":
@@ -604,7 +604,17 @@ with top_right:
         badge_class = ["top3-1", "top3-2", "top3-3"]
         for r, labels, cnt in ranked_groups:
             bc = badge_class[r - 1] if r <= 3 else "top3-3"
-            top3_html += f'<div class="top3-item"><b>{r}등</b> {", ".join(labels)} <span class="top3-badge {bc}">{cnt}회</span></div>'
+            bold_labels = []
+            for lb in labels:
+                if " (" in lb:
+                    real_name, rest = lb.split(" (", 1)
+                    bold_labels.append(f"<b>{real_name}</b> ({rest}")
+                else:
+                    bold_labels.append(f"<b>{lb}</b>")
+            top3_html += (
+                f'<div class="top3-item"><b>{r}등</b> {", ".join(bold_labels)} '
+                f'<span class="top3-badge {bc}">{cnt}회</span></div>'
+            )
     else:
         top3_html += '<div class="top3-item">이번 주 인증 데이터가 없습니다.</div>'
     top3_html += "</div>"
