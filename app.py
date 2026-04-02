@@ -31,6 +31,8 @@ st.markdown("""
     .center-data { width: 100%; max-width: 1600px; margin-left: auto; margin-right: auto; }
     .week-table-wrap { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin: 0.5rem 0 1rem 0; }
     .week-table-wrap table { background: #ffffff; }
+    .week-table-wrap thead th { position: sticky; top: 0; z-index: 5; background: #f7f7f7; }
+    .id-medium { font-weight: 500; }
     .top3-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; margin-left: 8px; }
     .top3-1 { background: #D4AF37; color: #FFFFFF; }
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
@@ -47,6 +49,9 @@ st.markdown("""
     .graph-head { margin-top: 18px; margin-bottom: 0; }
     .graph-head h3 { margin: 0; }
     .graph-head p { margin: 0; font-size: 0.92rem; color: #667085; }
+    .weekly-tab-title { font-size: 2rem; font-weight: 700; line-height: 1.25; margin: 0 0 8px 0; color: #111827; }
+    .weekly-tab-subtitle { font-size: 1.9rem; font-weight: 500; line-height: 1.35; margin: 0 0 20px 0; color: #1f2937; }
+    .red-divider { height: 24px; background: #ef1111; border-radius: 0; margin: 18px 0 14px 0; width: 100%; }
     .arrow-wrap { margin-top: 14px; }
     .arrow-wrap [data-testid="stButton"] > button {
         background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;
@@ -400,7 +405,7 @@ def _fig_realtime_exercise_lines(rows, week_sun, today_d):
                 )
             )
     fig.update_layout(
-        title=None,
+        title="",
         xaxis_title="요일",
         yaxis_title="인증 수 (명)",
         yaxis=dict(range=[0, y_top]),
@@ -447,6 +452,7 @@ def _fig_avg_week_mean_bars(rows, week_sun, today_d):
         ]
     )
     fig.update_layout(
+        title="",
         showlegend=False,
         height=360,
         margin=dict(t=16, b=48, l=24, r=24),
@@ -546,7 +552,8 @@ with top_left:
     with kpi_col2:
         st.markdown(
             f'<div class="kpi-card"><div class="kpi-title">3회 이상 인증하지 않은 인원 수</div>'
-            f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span></div></div>',
+            f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span>'
+            f'<span class="kpi-unit" style="margin-left:0;"> / {len(NAME_ID_LIST)}명</span></div></div>',
             unsafe_allow_html=True,
         )
     g_title_col, g_btn_col = st.columns([0.88, 0.12], gap="small")
@@ -620,8 +627,8 @@ with top_right:
     top3_html += "</div>"
     st.markdown(top3_html, unsafe_allow_html=True)
 
-# ── 탭: 이번주 운동 인증 현황 / 지난 운동 인증 기록 ──
-tab_weekly, tab_archive = st.tabs(["이번주 운동 인증 현황", "지난 운동 인증 기록"])
+# ── 탭: 운동인증 현황 / 지난 운동 인증 기록 ──
+tab_weekly, tab_archive = st.tabs(["운동인증 현황", "지난 운동 인증 기록"])
 
 
 def _fmt_date(d):
@@ -663,13 +670,18 @@ def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=
     return (
         '<div class="center-data week-table-wrap">'
         '<table style="border-collapse:collapse; width:100%; table-layout:fixed; font-size:14px;">'
-        f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 (아이디)</th>{header_cells}</tr></thead>'
+        f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 <span class="id-medium">(아이디)</span></th>{header_cells}</tr></thead>'
         "<tbody>" + "".join(body_rows) + "</tbody>"
         "</table></div>"
     )
 
 
 with tab_weekly:
+    st.markdown(
+        '<h2 class="weekly-tab-title">운동 인증 대시보드</h2>'
+        '<p class="weekly-tab-subtitle">이번주에 운동인증을 한 인원들을 한눈에 파악가능합니다. 지난 운동 기록도 조회가능합니다.</p>',
+        unsafe_allow_html=True,
+    )
     st.caption(period_str)
     week_table_html = _render_week_table_html(table_rows, week_dates, apply_red_highlight=True)
     st.markdown(week_table_html, unsafe_allow_html=True)
@@ -698,5 +710,5 @@ with tab_archive:
                 st.markdown(table_html, unsafe_allow_html=True)
                 st.caption("(최신 크롤 rows + 저장된 주간 스냅샷을 합쳐 표시 · 조회 전용)")
 
-st.markdown("---")
-st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하며, 데이터 가져오기(push) 시 Streamlit에 반영됩니다. 매주 일요일 00:00에 새 주로 전환됩니다.")
+st.markdown('<div class="red-divider"></div>', unsafe_allow_html=True)
+st.caption("이 페이지는 읽기 전용입니다. 주간 현황·지난 운동 인증 기록 데이터는 로컬 서버에서 관리하고 있습니다.")
