@@ -387,6 +387,42 @@ def _render_cumulative_section(cumulative_counts):
     )
 
 
+def _render_top3_section(table_rows, title: str, empty_msg=None):
+    """주간/아카이브 공통 TOP3."""
+    st.markdown("---")
+    st.subheader(title)
+    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
+    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
+    _groups = OrderedDict()
+    for label, cnt in top3_list:
+        _groups.setdefault(cnt, []).append(label)
+    ranked_groups = []
+    rank = 0
+    for cnt, labels in _groups.items():
+        rank += 1
+        if rank > 3:
+            break
+        ranked_groups.append((rank, labels, cnt))
+    if ranked_groups:
+        badge_class = ["top3-1", "top3-2", "top3-3"]
+        for r, labels, cnt in ranked_groups:
+            bc = badge_class[r - 1] if r <= 3 else "top3-3"
+            bold_labels = []
+            for lb in labels:
+                if " (" in lb:
+                    real_name, rest = lb.split(" (", 1)
+                    bold_labels.append(f"<b>{real_name}</b> ({rest}")
+                else:
+                    bold_labels.append(f"<b>{lb}</b>")
+            names_str = ", ".join(bold_labels)
+            st.markdown(
+                f'**{r}등** {names_str} <span class="top3-badge {bc}">{cnt}회</span>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.caption(empty_msg or "해당 주 인증 데이터가 없습니다.")
+
+
 def _fig_week_compare_lines(
     y_prev, y_this, week_dates, prev_dates, today_d=None, highlight_today=False,
     legend_prev="지난주", legend_this="이번주", hover_prev_prefix="지난주", hover_this_prefix="이번주",
@@ -850,6 +886,11 @@ with tab_archive:
                     key=f"archive_graph_{week_sun_s}",
                 )
                 st.caption("(최신 크롤 rows + 저장된 주간 스냅샷을 합쳐 표시 · 조회 전용)")
+                _render_top3_section(
+                    rows_show,
+                    f"{period_label} 인증 TOP3",
+                    empty_msg="해당 주 인증 데이터가 없습니다.",
+                )
 
 with tab_cumulative:
     st.caption(
