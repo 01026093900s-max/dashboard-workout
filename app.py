@@ -444,6 +444,9 @@ _DAY_LONG_KR = ["월요일", "화요일", "수요일", "목요일", "금요일",
 
 # Python weekday(): 월=0, 화=1, …, 일=6
 WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
+# 카페 인증게시판 최초 게시일 — 누적 인증 집계 시작일
+CUMULATIVE_START_DATE = datetime(2026, 2, 23).date()
+CUMULATIVE_START_LABEL = "2026년 2월 23일"
 ROW_HIGHLIGHT_UNDER_3 = "#FFD8D8"
 CHECK_BLUE = "#4E6FFF"
 
@@ -1115,29 +1118,39 @@ def _name_from_row_label(row_label):
     return row_label
 
 
-def _cumulative_certs_by_person(archive_list, cafe_rows, manual_certs, current_week_sun, current_week_sat):
-    """아카이브된 전 주 + 이번 주 table_rows 기준 인원별 누적 인증 횟수 (1일 1회 규칙)."""
-    counts = {name: 0 for name, _ in NAME_ID_LIST}
+def _week_sun_for(d):
+    """해당 날짜가 속한 주의 일요일."""
+    return d - timedelta(days=(d.weekday() + 1) % 7)
+
+
+def _merged_table_rows_for_week(archive_list, cafe_rows, manual_certs, sun_d):
+    """주간 table_rows: 크롤·수동 + 아카이브 스냅샷 병합."""
+    sat_d = sun_d + timedelta(days=6)
+    live_w = _build_table_rows_for_week(cafe_rows, manual_certs, sun_d, sat_d)
     for entry in archive_list or []:
-        ws = entry.get("week_sun")
-        if not ws:
-            continue
-        try:
-            sun_d = datetime.strptime(ws, "%Y-%m-%d").date()
-        except Exception:
-            continue
-        sat_d = sun_d + timedelta(days=6)
-        live_w = _build_table_rows_for_week(cafe_rows, manual_certs, sun_d, sat_d)
-        merged_w = merge_live_and_snapshot_week_rows(live_w, entry.get("table_rows") or [])
-        for row_label, _, cnt in merged_w:
+        if entry.get("week_sun") == sun_d.isoformat():
+            return merge_live_and_snapshot_week_rows(live_w, entry.get("table_rows") or [])
+    return live_w
+
+
+def _cumulative_certs_by_person(archive_list, cafe_rows, manual_certs, current_week_sun):
+    """최초 인증일(CUMULATIVE_START_DATE)부터 오늘까지 인원별 누적 (1일 1회)."""
+    counts = {name: 0 for name, _ in NAME_ID_LIST}
+    today_d = datetime.now().date()
+    sun_d = _week_sun_for(CUMULATIVE_START_DATE)
+    while sun_d <= current_week_sun:
+        merged = _merged_table_rows_for_week(archive_list, cafe_rows, manual_certs, sun_d)
+        week_dates = [sun_d + timedelta(days=i) for i in range(7)]
+        for row_label, day_cells, _ in merged:
             name = _name_from_row_label(row_label)
-            if name in counts:
-                counts[name] += cnt
-    current_tr = _build_table_rows_for_week(cafe_rows, manual_certs, current_week_sun, current_week_sat)
-    for row_label, _, cnt in current_tr:
-        name = _name_from_row_label(row_label)
-        if name in counts:
-            counts[name] += cnt
+            if name not in counts:
+                continue
+            for j, d in enumerate(week_dates):
+                if d < CUMULATIVE_START_DATE or d > today_d:
+                    continue
+                if j < len(day_cells) and _cell_checked_simple(day_cells[j]):
+                    counts[name] += 1
+        sun_d += timedelta(days=7)
     return counts
 
 
@@ -1162,7 +1175,7 @@ def _render_cumulative_section(cumulative_counts):
     st.markdown(
         '<div class="cumulative-card">'
         "<h4>인원별 누적 인증 횟수</h4>"
-        '<p class="cum-sub">아카이브된 지난 주 + 이번 주 인증을 합산합니다. (하루 1회 인정)</p>'
+        f'<p class="cum-sub">{CUMULATIVE_START_LABEL}(카페 최초 인증일)부터 오늘까지 합산합니다. (하루 1회 인정)</p>'
         + "".join(rows_html)
         + "</div>",
         unsafe_allow_html=True,
@@ -1530,7 +1543,7 @@ with top_right:
     st.markdown(top3_html, unsafe_allow_html=True)
 
 _cumulative_counts = _cumulative_certs_by_person(
-    archive, cafe_rows, st.session_state.get("manual_certs", []), week_sun, week_sat
+    archive, cafe_rows, st.session_state.get("manual_certs", []), week_sun
 )
 
 # ----- 탭: 운동인증 현황 / 지난 운동 인증 기록 -----
@@ -1888,8 +1901,8 @@ with tab_archive:
 
 with tab_cumulative:
     st.caption(
-        "멤버별 누적 인증 횟수입니다. 아카이브에 저장된 지난 주 + 이번 주 데이터를 합산하며, "
-        "하루에 여러 번 올려도 1회로 인정하는 주간 표와 동일한 기준입니다."
+        f"멤버별 누적 인증 횟수입니다. **{CUMULATIVE_START_LABEL}**(카페 인증게시판 최초 게시일)부터 오늘까지 "
+        "합산하며, 하루에 여러 번 올려도 1회로 인정하는 주간 표와 동일한 기준입니다."
     )
     _render_cumulative_section(_cumulative_counts)
     _total_all = sum(_cumulative_counts.values())
