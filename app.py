@@ -26,12 +26,31 @@ st.markdown(
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
     html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background: #ffffff; color: #000000; }
-    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 100%; }
-    h1 { color: #000000 !important; font-weight: 700 !important; border: none !important; font-size: 1.75rem !important; margin-bottom: 0.25rem !important; }
+    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1600px; }
+    [data-testid="stMainBlockContainer"] { padding-top: 40px !important; }
+    h1 {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        font-size: 1.75rem !important;
+        line-height: 1.25 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+        overflow: visible !important;
+    }
     .main p { color: #333333; }
-    .center-data { width: 100%; max-width: 900px; margin-left: 0; margin-right: auto; }
-    .week-table-wrap { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin: 0.5rem 0 1rem 0; }
+    .center-data { width: 100%; max-width: 1600px; margin-left: auto; margin-right: auto; }
+    .week-table-wrap { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin: 0.5rem 0 1rem 0; overflow: visible; }
     .week-table-wrap table { background: #ffffff; }
+    .week-table-sticky-head {
+        position: sticky;
+        top: 56px;
+        z-index: 200;
+        background: #ffffff;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    }
+    .id-medium { font-weight: 500; }
     .top3-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; margin-left: 8px; }
     .top3-1 { background: #D4AF37; color: #FFFFFF; }
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
@@ -41,6 +60,41 @@ st.markdown(
     .kpi-title { font-size: 0.95rem; color: #5b6475; font-weight: 600; margin-bottom: 10px; }
     .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; color: #111827; }
     .kpi-unit { font-size: 1rem; font-weight: 700; margin-left: 2px; color: #4b5563; }
+    .top3-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 14px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); width: 100%; box-sizing: border-box; overflow: hidden; }
+    .top3-item { padding: 10px 0; border-bottom: 1px solid #eceff4; }
+    .top3-item:last-child { border-bottom: none; }
+    .dashboard-top-gap { margin-top: 8px; margin-bottom: 12px; }
+    .graph-head { margin-top: 40px; margin-bottom: 0; }
+    .graph-head h3 { margin: 0 !important; margin-bottom: 8px !important; padding: 0 !important; line-height: 1.25 !important; }
+    .graph-head p { margin: 0 !important; padding: 0 !important; font-size: 14px !important; font-weight: 500 !important; color: #667085; }
+    .weekly-tab-title { font-size: 28px !important; font-weight: 600 !important; line-height: 1.25 !important; margin: 0 0 8px 0 !important; color: #111827 !important; }
+    .weekly-tab-subtitle { font-size: 14px !important; font-weight: 500 !important; line-height: 1.45 !important; margin: 0 0 20px 0 !important; color: #667085 !important; }
+    .weekly-tab-intro { margin-top: 40px; }
+    .arrow-wrap { margin-top: 40px; }
+    .arrow-wrap [data-testid="stButton"] > button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        min-height: 72px !important;
+        width: 72px !important;
+        height: 72px !important;
+        color: #0D0D0D !important;
+        line-height: 1 !important;
+    }
+    .arrow-wrap [data-testid="stButton"] > button p,
+    .arrow-wrap [data-testid="stButton"] > button span,
+    .arrow-wrap [data-testid="stButton"] > button div {
+        margin: 0 !important;
+        font-size: 72px !important;
+        line-height: 1 !important;
+        font-weight: 700 !important;
+    }
+    .arrow-wrap [data-testid="stButton"] > button:disabled {
+        color: #808080 !important;
+        opacity: 1 !important;
+        cursor: default !important;
+    }
     .cumulative-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 18px 20px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); margin: 0 0 20px 0; }
     .cumulative-card h4 { margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 700; color: #111827; }
     .cumulative-card .cum-sub { font-size: 14px; font-weight: 500; color: #667085; margin: 0 0 14px 0; }
@@ -54,12 +108,6 @@ st.markdown(
     .archive-graph-head { margin: 20px 0 8px 0; }
     .archive-graph-head h4 { margin: 0 0 4px 0 !important; font-size: 1.05rem !important; font-weight: 700 !important; color: #111827 !important; }
     .archive-graph-head p { margin: 0 !important; font-size: 13px !important; color: #667085 !important; }
-    .weekly-tab-intro { margin-top: 8px; margin-bottom: 4px; }
-    .weekly-tab-title { font-size: 1.35rem !important; font-weight: 700 !important; color: #111827 !important; margin: 0 0 6px 0 !important; }
-    .weekly-tab-subtitle { font-size: 14px !important; color: #667085 !important; margin: 0 0 12px 0 !important; }
-    .avg-bar-title-main { font-size: 1.35rem; font-weight: 700; color: #000; margin-bottom: 0.35rem; }
-    .avg-bar-title-sub { font-size: 1rem; color: #000; margin-bottom: 0.25rem; line-height: 1.4; }
-    .avg-bar-title-note { font-size: 0.8rem; color: #888888; line-height: 1.35; margin-bottom: 0.75rem; }
     .avg-bar-chart-section-marker { display: none !important; }
     [data-testid="stMarkdown"]:has(.avg-bar-chart-section-marker) + div [data-testid="stPlotlyChart"] iframe {
         border-radius: 12px !important;
@@ -108,8 +156,8 @@ WEEKDAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
 _DAY_LONG_KR = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
 CUMULATIVE_START_DATE = datetime(2026, 2, 23).date()
 CUMULATIVE_START_LABEL = "2026년 2월 23일"
-ROW_HIGHLIGHT_UNDER_3 = "#FFB3B3"
-CHECK_GREEN = "#90EE90"
+ROW_HIGHLIGHT_UNDER_3 = "#FFD8D8"
+CHECK_BLUE = "#4E6FFF"
 
 _TITLE_ALIASES = {}
 for _n, _c in NAME_ID_LIST:
@@ -489,8 +537,8 @@ def _fig_avg_week_mean_bars(rows, week_sun, today_d):
         margin=dict(t=16, b=48, l=24, r=24),
         yaxis=dict(range=[0, max(v_last, v_this, 1) * 1.28], showgrid=True, title=None),
         xaxis=dict(title=None),
-        plot_bgcolor="#FAFAFA",
-        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     return fig
 
@@ -602,72 +650,67 @@ week_dates = [week_sun + timedelta(days=i) for i in range(7)]
 period_str = f"이번 주 기간: {week_sun.month}월 {week_sun.day}일 ({WEEKDAY_NAMES[week_sun.weekday()]}) ~ {week_sat.month}월 {week_sat.day}일 ({WEEKDAY_NAMES[week_sat.weekday()]})"
 
 table_rows = _table_rows_for_week_range(cafe_rows, week_sun, week_sat)
-_cumulative_counts = _cumulative_certs_by_person(archive, cafe_rows, week_sun)
+this_week_total_certs = sum(r[2] for r in table_rows)
+under_three_count = sum(1 for r in table_rows if r[2] < 3)
+if "graph_view_mode" not in st.session_state:
+    st.session_state["graph_view_mode"] = "realtime"
 
-st.markdown(
-    '<div class="weekly-tab-intro">'
-    '<div class="weekly-tab-title">운동 인증 대시보드</div>'
-    '<div class="weekly-tab-subtitle">이번주에 운동인증을 한 인원들을 한눈에 파악가능합니다. 지난 운동 기록도 조회가능합니다.</div>'
-    '</div>',
-    unsafe_allow_html=True,
-)
-tab_weekly, tab_archive, tab_cumulative = st.tabs(["운동인증 현황", "지난 운동 인증 기록", "누적 인증 현황"])
+st.markdown('<div class="dashboard-top-gap"></div>', unsafe_allow_html=True)
+top_left, top_right = st.columns([1.75, 1.1], gap="medium")
+with top_left:
+    kpi_col1, kpi_col2 = st.columns(2, gap="medium")
+    with kpi_col1:
+        st.markdown(
+            f'<div class="kpi-card"><div class="kpi-title">이번주 총 인증글 수 (누적)</div>'
+            f'<div><span class="kpi-value">{this_week_total_certs}</span><span class="kpi-unit">회</span></div></div>',
+            unsafe_allow_html=True,
+        )
+    with kpi_col2:
+        st.markdown(
+            f'<div class="kpi-card"><div class="kpi-title">3회 이상 인증하지 않은 인원 수</div>'
+            f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span>'
+            f'<span class="kpi-unit" style="margin-left:0;"> / {len(NAME_ID_LIST)}명</span></div></div>',
+            unsafe_allow_html=True,
+        )
+    g_title_col, g_btn_col = st.columns([0.88, 0.12], gap="small")
+    with g_title_col:
+        if st.session_state["graph_view_mode"] == "realtime":
+            st.markdown(
+                '<div class="graph-head"><h3>실시간 운동 인증 그래프</h3><p>지난주와 이번주의 운동인증량을 실시간으로 비교합니다.</p></div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<div class="graph-head"><h3>지난주 평균 운동 인증 그래프</h3><p>지난주와 이번주의 평균 운동 인증량을 비교합니다.</p></div>',
+                unsafe_allow_html=True,
+            )
+    with g_btn_col:
+        st.markdown('<div class="arrow-wrap">', unsafe_allow_html=True)
+        pcol, ncol = st.columns(2, gap="small")
+        with pcol:
+            if st.button("‹", key="graph_prev", disabled=st.session_state["graph_view_mode"] == "realtime"):
+                st.session_state["graph_view_mode"] = "realtime"
+                st.rerun()
+        with ncol:
+            if st.button("›", key="graph_next", disabled=st.session_state["graph_view_mode"] == "avg"):
+                st.session_state["graph_view_mode"] = "avg"
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    if st.session_state["graph_view_mode"] == "realtime":
+        st.plotly_chart(
+            _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
+            width="stretch",
+            key="weekly_rt_line_top",
+        )
+    else:
+        st.plotly_chart(
+            _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
+            width="stretch",
+            key="weekly_bar_mean_top",
+        )
 
-
-def _fmt_date(d):
-    return f"{d.month}/{d.day}({WEEKDAY_NAMES[d.weekday()]})"
-
-
-def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=False, highlight_under_3_always=False):
-    header_cells = "".join(
-        f'<th style="padding:6px 10px; border:1px solid #ddd;">{_fmt_date(d)}</th>' for d in week_dates_arg
-    )
-    header_cells += '<th style="padding:6px 10px; border:1px solid #ddd;">비고</th>'
-    BIBLE_BG = "#FFE98F"
-    BIBLE_TEXT = "#0D0D0D"
-    is_red_window = apply_red_highlight and today.weekday() in (4, 5)
-    body_rows = []
-    for row_label, day_cells, count in table_rows_arg:
-        is_under_3 = (highlight_under_3_always and count < 3) or (is_red_window and count < 3)
-        name_cell_style = "padding:6px 10px; border:1px solid #ddd; font-weight:bold;"
-        if is_under_3:
-            name_cell_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
-        cells = [f'<td style="{name_cell_style}">{row_label}</td>']
-        for val, checked, cell_type in day_cells:
-            if checked and cell_type == "bible":
-                cells.append(
-                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{BIBLE_BG}; color:{BIBLE_TEXT}; text-align:center;">{val}</td>'
-                )
-            elif checked and cell_type == "exercise":
-                cells.append(
-                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_GREEN}; text-align:center;">{val}</td>'
-                )
-            else:
-                cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
-        remarks_style = "padding:6px 10px; border:1px solid #ddd; text-align:center;"
-        if is_under_3:
-            remarks_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
-        cells.append(f'<td style="{remarks_style}">{count}회</td>')
-        body_rows.append("<tr>" + "".join(cells) + "</tr>")
-    return (
-        '<div class="center-data week-table-wrap">'
-        '<table style="border-collapse:collapse; width:100%; max-width:900px; font-size:14px;">'
-        f'<thead><tr><th style="padding:6px 10px; border:1px solid #ddd;">실명 (아이디)</th>{header_cells}</tr></thead>'
-        "<tbody>" + "".join(body_rows) + "</tbody>"
-        "</table></div>"
-    )
-
-
-with tab_weekly:
-    st.caption(period_str)
-    week_table_html = _render_week_table_html(table_rows, week_dates, apply_red_highlight=True)
-    st.markdown(week_table_html, unsafe_allow_html=True)
-    st.caption(
-        "하루에 여러 번 올려도 1회로 인정합니다. 금요일 00:00~토요일 23:59 구간에서 주 3회 미만 시 이름·비고란을 연한 빨간색으로 표시합니다."
-    )
-
-    st.markdown("---")
-    st.subheader("이번주 인증 TOP3")
+with top_right:
+    top3_html = '<div class="top3-card"><h4 style="margin:0 0 8px 0;">이번주 Top3</h4>'
     sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
     top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
     _groups = OrderedDict()
@@ -691,36 +734,83 @@ with tab_weekly:
                     bold_labels.append(f"<b>{real_name}</b> ({rest}")
                 else:
                     bold_labels.append(f"<b>{lb}</b>")
-            names_str = ", ".join(bold_labels)
-            st.markdown(
-                f'**{r}등** {names_str} <span class="top3-badge {bc}">{cnt}회</span>',
-                unsafe_allow_html=True,
+            top3_html += (
+                f'<div class="top3-item"><b>{r}등</b> {", ".join(bold_labels)} '
+                f'<span class="top3-badge {bc}">{cnt}회</span></div>'
             )
     else:
-        st.caption("이번 주 인증 데이터가 없습니다. (해당 주 일요일~토요일 기준)")
+        top3_html += '<div class="top3-item">이번 주 인증 데이터가 없습니다.</div>'
+    top3_html += "</div>"
+    st.markdown(top3_html, unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.subheader("주간 비교 그래프")
+_cumulative_counts = _cumulative_certs_by_person(archive, cafe_rows, week_sun)
+
+st.markdown(
+    '<div class="weekly-tab-intro">'
+    '<div class="weekly-tab-title">운동 인증 대시보드</div>'
+    '<div class="weekly-tab-subtitle">이번주에 운동인증을 한 인원들을 한눈에 파악가능합니다. 지난 운동 기록도 조회가능합니다.</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
+tab_weekly, tab_archive, tab_cumulative = st.tabs(["운동인증 현황", "지난 운동 인증 기록", "누적 인증 현황"])
+
+
+def _fmt_date(d):
+    return f"{d.month}/{d.day}({WEEKDAY_NAMES[d.weekday()]})"
+
+
+def _render_week_table_html(table_rows_arg, week_dates_arg, apply_red_highlight=False, highlight_under_3_always=False):
+    sticky_th_style = "padding:6px 10px; border:1px solid #ddd; background:#ffffff;"
+    header_cells = "".join(
+        f'<th style="{sticky_th_style}">{_fmt_date(d)}</th>' for d in week_dates_arg
+    )
+    header_cells += f'<th style="{sticky_th_style}">비고</th>'
+    BIBLE_BG = "#FFE98F"
+    BIBLE_TEXT = "#0D0D0D"
+    is_red_window = apply_red_highlight and today.weekday() in (4, 5)
+    body_rows = []
+    for row_label, day_cells, count in table_rows_arg:
+        is_under_3 = (highlight_under_3_always and count < 3) or (is_red_window and count < 3)
+        name_cell_style = "padding:6px 10px; border:1px solid #ddd; font-weight:bold;"
+        if is_under_3:
+            name_cell_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
+        cells = [f'<td style="{name_cell_style}">{row_label}</td>']
+        for val, checked, cell_type in day_cells:
+            if checked and cell_type == "bible":
+                cells.append(
+                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{BIBLE_BG}; '
+                    f'color:{BIBLE_TEXT}; text-align:center;">{val}</td>'
+                )
+            elif checked and cell_type == "exercise":
+                cells.append(
+                    f'<td style="padding:6px 10px; border:1px solid #ddd; background-color:{CHECK_BLUE}; '
+                    f'color:#FFFFFF; font-weight:700; text-align:center;">{val}</td>'
+                )
+            else:
+                cells.append(f'<td style="padding:6px 10px; border:1px solid #ddd;"></td>')
+        remarks_style = "padding:6px 10px; border:1px solid #ddd; text-align:center;"
+        if is_under_3:
+            remarks_style += f" background-color:{ROW_HIGHLIGHT_UNDER_3};"
+        cells.append(f'<td style="{remarks_style}">{count}회</td>')
+        body_rows.append("<tr>" + "".join(cells) + "</tr>")
+    return (
+        '<div class="center-data week-table-wrap">'
+        '<div class="week-table-sticky-head">'
+        '<table style="border-collapse:separate; border-spacing:0; width:100%; table-layout:fixed; font-size:14px;">'
+        f'<thead><tr><th style="{sticky_th_style}">실명 <span class="id-medium">(아이디)</span></th>{header_cells}</tr></thead>'
+        "</table></div>"
+        '<table style="border-collapse:separate; border-spacing:0; width:100%; table-layout:fixed; font-size:14px;">'
+        "<tbody>" + "".join(body_rows) + "</tbody>"
+        "</table></div>"
+    )
+
+
+with tab_weekly:
+    st.caption(period_str)
+    week_table_html = _render_week_table_html(table_rows, week_dates, apply_red_highlight=True)
+    st.markdown(week_table_html, unsafe_allow_html=True)
     st.caption(
-        "실시간 운동 인증 그래프: 지난주(회색)와 이번주(파랑) 일별 인증 **명 수**를 비교합니다. "
-        "원에 마우스를 올리면 **해당 요일 운동인증 횟수**가 표시됩니다. 오늘 데이터 점은 외곽선이 깜빡입니다."
-    )
-    st.plotly_chart(
-        _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
-        use_container_width=True,
-        key="weekly_rt_line_public",
-    )
-    st.markdown(
-        '<div class="avg-bar-title-main">지난주 평균 운동 인증 그래프</div>'
-        '<div class="avg-bar-title-sub">지난주와 이번주의 평균 운동 인증량입니다.</div>'
-        '<div class="avg-bar-title-note">지난주 (일~토요일까지의 평균), 이번주 (일~현재까지의 평균)</div>'
-        '<div class="avg-bar-chart-section-marker" aria-hidden="true"></div>',
-        unsafe_allow_html=True,
-    )
-    st.plotly_chart(
-        _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
-        use_container_width=True,
-        key="weekly_bar_mean_public",
+        "하루에 여러 번 올려도 1회로 인정합니다. 금요일 00:00~토요일 23:59 구간에서 주 3회 미만 시 이름·비고란을 연한 빨간색으로 표시합니다."
     )
 
 with tab_archive:
