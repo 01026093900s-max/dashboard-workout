@@ -1305,5 +1305,3 @@ st.caption(
     "표·그래프는 GitHub `data.json`(또는 배포 폴더의 `data.json`) 기준입니다. "
     "원격 URL은 환경변수 `DATA_JSON_REMOTE_URL`로 바꿀 수 있습니다."
 )
-
-)
