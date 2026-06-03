@@ -27,8 +27,8 @@ st.markdown(
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
     html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background: #ffffff; color: #000000; }
-    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1600px; }
-    [data-testid="stMainBlockContainer"] { padding-top: 40px !important; }
+    .main .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1600px; overflow: visible !important; }
+    [data-testid="stMainBlockContainer"] { padding-top: 48px !important; overflow: visible !important; }
     h1 {
         color: #000000 !important;
         font-weight: 700 !important;
@@ -39,6 +39,15 @@ st.markdown(
         margin-bottom: 0 !important;
         padding-top: 0 !important;
         overflow: visible !important;
+    }
+    [data-testid="stElementContainer"]:has([data-testid="stHeading"]),
+    [data-testid="element-container"]:has([data-testid="stHeading"]),
+    [data-testid="stElementContainer"]:has(h1),
+    [data-testid="element-container"]:has(h1) {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
     }
     .main p { color: #333333; }
     .center-data { width: 100%; max-width: 1600px; margin-left: auto; margin-right: auto; }
@@ -78,7 +87,7 @@ st.markdown(
     .dashboard-hero-row-boundary { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
     .hero-graph-anchor { display: none !important; }
     .dashboard-hero-row-boundary, .hero-graph-zone-marker, .hero-section-end { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) {
         position: relative !important;
         width: 100% !important;
         min-height: var(--hero-stack-h, 480px) !important;
@@ -96,18 +105,19 @@ st.markdown(
         z-index: 2 !important;
         box-sizing: border-box !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-cards-side),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-cards-side) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-cards-side),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-cards-side) {
+        position: relative !important;
         height: 0 !important;
         min-height: 0 !important;
         overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker) ~ [data-testid="element-container"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-graph-zone-marker) ~ [data-testid="element-container"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)) {
         margin-left: 400px !important;
         margin-top: 0 !important;
         padding-top: 0 !important;
@@ -116,33 +126,33 @@ st.markdown(
         min-width: 0 !important;
         box-sizing: border-box !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-head),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-head),
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-head),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-graph-head),
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
         align-items: flex-start !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="column"]:has(.hero-graph-head) {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="column"]:has(.hero-graph-head) {
         align-self: flex-start !important;
         padding-top: 0 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .graph-head,
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .hero-graph-head {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .graph-head,
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .hero-graph-head {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"],
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"] iframe {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"],
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"] iframe {
         width: 100% !important;
         max-width: 100% !important;
     }
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-section-end) ~ [data-testid="stElementContainer"],
-    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-section-end) ~ [data-testid="element-container"] {
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="stElementContainer"]:has(.hero-section-end) ~ [data-testid="stElementContainer"],
+    div[data-testid="stVerticalBlock"]:has(.dashboard-hero-row-boundary):not(:has([data-testid="stHeading"])):not(:has(h1)) [data-testid="element-container"]:has(.hero-section-end) ~ [data-testid="element-container"] {
         margin-left: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -399,29 +409,48 @@ def _fix_hero_float_layout_js(stack_h: int) -> None:
   const STACK_H = {stack_h};
   const WCALC = "calc(100% - " + ML + "px)";
   function apply() {{
+    doc.querySelectorAll('[data-testid="stElementContainer"], [data-testid="element-container"]').forEach((ec) => {{
+      if (!ec.querySelector("h1, [data-testid='stHeading']")) return;
+      ec.style.setProperty("height", "auto", "important");
+      ec.style.setProperty("overflow", "visible", "important");
+      ec.style.setProperty("margin-top", "0", "important");
+      ec.style.setProperty("min-height", "0", "important");
+    }});
+    doc.querySelectorAll('[data-testid="stVerticalBlock"]').forEach((vb) => {{
+      if (!vb.querySelector("h1, [data-testid='stHeading']")) return;
+      vb.style.removeProperty("position");
+      vb.style.removeProperty("min-height");
+      vb.style.removeProperty("gap");
+      vb.style.removeProperty("row-gap");
+    }});
     const cards = doc.querySelector(".hero-cards-side");
-    const vBlock = cards && cards.closest('[data-testid="stVerticalBlock"]');
-    if (!vBlock || !cards) return;
-    vBlock.style.setProperty("position", "relative", "important");
-    vBlock.style.setProperty("min-height", STACK_H + "px", "important");
-    vBlock.style.setProperty("width", "100%", "important");
-    vBlock.style.setProperty("gap", "0", "important");
-    vBlock.style.setProperty("row-gap", "0", "important");
+    const heroEnd = doc.querySelector(".hero-section-end");
+    if (!cards || !heroEnd) return;
+    const cardsEc = cards.closest('[data-testid="stElementContainer"], [data-testid="element-container"]');
+    if (!cardsEc) return;
+    const heroHost = cardsEc.parentElement;
+    if (!heroHost || !heroHost.contains(heroEnd)) return;
+    if (heroHost.querySelector("h1, [data-testid='stHeading']")) return;
+    heroHost.style.setProperty("position", "relative", "important");
+    heroHost.style.setProperty("min-height", STACK_H + "px", "important");
+    heroHost.style.setProperty("gap", "0", "important");
+    heroHost.style.setProperty("row-gap", "0", "important");
+    cardsEc.style.setProperty("position", "relative", "important");
+    cardsEc.style.setProperty("height", "0", "important");
+    cardsEc.style.setProperty("min-height", "0", "important");
+    cardsEc.style.setProperty("overflow", "visible", "important");
+    cardsEc.style.setProperty("margin", "0", "important");
+    cardsEc.style.setProperty("padding", "0", "important");
     cards.style.setProperty("position", "absolute", "important");
     cards.style.setProperty("left", "0", "important");
     cards.style.setProperty("top", "0", "important");
     cards.style.setProperty("width", W + "px", "important");
     cards.style.setProperty("float", "none", "important");
     let zone = false;
-    vBlock.querySelectorAll('[data-testid="stElementContainer"], [data-testid="element-container"]').forEach((ec) => {{
-      if (ec.querySelector(".hero-cards-side")) {{
-        ec.style.setProperty("height", "0", "important");
-        ec.style.setProperty("min-height", "0", "important");
-        ec.style.setProperty("overflow", "visible", "important");
-        ec.style.setProperty("margin", "0", "important");
-        ec.style.setProperty("padding", "0", "important");
-        return;
-      }}
+    heroHost.querySelectorAll('[data-testid="stElementContainer"], [data-testid="element-container"]').forEach((ec) => {{
+      if (!heroHost.contains(ec)) return;
+      if (ec.querySelector("h1, [data-testid='stHeading']")) return;
+      if (ec.querySelector(".hero-cards-side")) return;
       if (ec.querySelector(".hero-section-end")) {{
         zone = false;
         ec.style.setProperty("margin-left", "0", "important");
@@ -445,7 +474,7 @@ def _fix_hero_float_layout_js(stack_h: int) -> None:
       ec.style.setProperty("max-width", WCALC, "important");
     }});
     let hRow = null;
-    vBlock.querySelectorAll('[data-testid="stHorizontalBlock"]').forEach((hb) => {{
+    heroHost.querySelectorAll('[data-testid="stHorizontalBlock"]').forEach((hb) => {{
       if (hb.querySelector(".hero-graph-head")) hRow = hb;
     }});
     if (hRow) {{
@@ -458,21 +487,14 @@ def _fix_hero_float_layout_js(stack_h: int) -> None:
         hEc.style.setProperty("padding-top", "0", "important");
       }}
     }}
-    vBlock.querySelectorAll('[data-testid="column"]').forEach((col) => {{
+    heroHost.querySelectorAll('[data-testid="column"]').forEach((col) => {{
       if (!col.querySelector(".hero-graph-head")) return;
       col.style.setProperty("align-self", "flex-start", "important");
       col.style.setProperty("padding-top", "0", "important");
     }});
-    const head = vBlock.querySelector(".hero-graph-head");
-    if (head && cards) {{
-      const delta = head.getBoundingClientRect().top - cards.getBoundingClientRect().top;
-      if (Math.abs(delta) > 0.5) {{
-        const titleEc = head.closest('[data-testid="stElementContainer"], [data-testid="element-container"]')
-          || (hRow && hRow.closest('[data-testid="stElementContainer"], [data-testid="element-container"]'));
-        if (titleEc) titleEc.style.setProperty("margin-top", (-delta) + "px", "important");
-      }}
-    }}
-    const iframe = vBlock.querySelector('[data-testid="stPlotlyChart"] iframe');
+    const head = heroHost.querySelector(".hero-graph-head");
+    if (head) head.style.setProperty("margin-top", "0", "important");
+    const iframe = heroHost.querySelector('[data-testid="stPlotlyChart"] iframe');
     if (iframe) {{
       const w = iframe.parentElement && iframe.parentElement.getBoundingClientRect().width;
       if (w > 0) iframe.style.setProperty("width", w + "px", "important");
@@ -506,9 +528,30 @@ def _render_dashboard_hero_section(
     _cards = _build_hero_left_cards_html(
         table_rows, this_week_total_certs, under_three_count, len(NAME_ID_LIST)
     )
+    with st.container():
+        _render_dashboard_hero_section_inner(
+            _hero_stack_h,
+            _hero_chart_h,
+            _cards,
+            table_rows,
+            cafe_rows,
+            week_sun,
+            today,
+        )
+
+
+def _render_dashboard_hero_section_inner(
+    _hero_stack_h,
+    _hero_chart_h,
+    _cards,
+    table_rows,
+    cafe_rows,
+    week_sun,
+    today,
+) -> None:
     st.markdown(
         f'<div class="dashboard-hero-row-boundary" aria-hidden="true"></div>'
-        f"<style>div[data-testid=\"stVerticalBlock\"]:has(.hero-cards-side){{"
+        f"<style>div[data-testid=\"stVerticalBlock\"]:has(.dashboard-hero-row-boundary):not(:has([data-testid=\"stHeading\"])):not(:has(h1)){{"
         f"--hero-stack-h:{_hero_stack_h}px;--hero-chart-h:{_hero_chart_h}px;}}</style>"
         f'<div class="hero-cards-side">{_cards}</div>',
         unsafe_allow_html=True,
@@ -1261,4 +1304,6 @@ st.markdown("---")
 st.caption(
     "표·그래프는 GitHub `data.json`(또는 배포 폴더의 `data.json`) 기준입니다. "
     "원격 URL은 환경변수 `DATA_JSON_REMOTE_URL`로 바꿀 수 있습니다."
+)
+
 )
