@@ -11,6 +11,7 @@ import re
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
@@ -56,11 +57,146 @@ st.markdown(
     .top3-2 { background: #E5E4E2; color: #0D0D0D; }
     .top3-3 { background: #B87333; color: #FFFFFF; }
     .update-badge { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.85rem; color: #555; margin-top: 4px; margin-bottom: 32px; }
-    .kpi-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 16px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); min-height: 104px; }
+    .kpi-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 16px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); box-sizing: border-box; }
+    .kpi-card.dashboard-card-360 { width: 360px !important; max-width: 360px !important; min-width: 360px !important; }
     .kpi-title { font-size: 0.95rem; color: #5b6475; font-weight: 600; margin-bottom: 10px; }
     .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; color: #111827; }
     .kpi-unit { font-size: 1rem; font-weight: 700; margin-left: 2px; color: #4b5563; }
-    .top3-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 14px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); width: 100%; box-sizing: border-box; overflow: hidden; }
+    .top3-card { border: 1px solid #e6e8ef; border-radius: 14px; padding: 14px 18px; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); box-sizing: border-box; overflow: hidden; }
+    .top3-card.dashboard-card-360 { width: 360px !important; max-width: 360px !important; min-width: 360px !important; }
+    .dashboard-hero-card-gap { margin-bottom: 32px !important; display: block !important; }
+    .hero-cards-stack {
+        width: 360px !important;
+        max-width: 360px !important;
+        min-width: 360px !important;
+        box-sizing: border-box !important;
+        display: block !important;
+        overflow: hidden !important;
+    }
+    .graph-head.hero-graph-head { margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; }
+    .arrow-wrap.hero-arrow-wrap { margin-top: 0 !important; align-self: flex-start !important; }
+    .dashboard-hero-row-boundary { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+    .hero-graph-anchor { display: none !important; }
+    .dashboard-hero-row-boundary, .hero-graph-zone-marker, .hero-section-end { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) {
+        position: relative !important;
+        width: 100% !important;
+        min-height: var(--hero-stack-h, 480px) !important;
+        gap: 0 !important;
+        row-gap: 0 !important;
+    }
+    .hero-cards-side {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 360px !important;
+        max-width: 360px !important;
+        margin: 0 !important;
+        float: none !important;
+        z-index: 2 !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-cards-side),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-cards-side) {
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker) ~ [data-testid="element-container"]:not(:has(.hero-section-end)):not(:has(.hero-cards-side)) {
+        margin-left: 400px !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        width: calc(100% - 400px) !important;
+        max-width: calc(100% - 400px) !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-zone-marker),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-head),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-graph-head),
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stHorizontalBlock"]:has(.hero-graph-head) {
+        align-items: flex-start !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="column"]:has(.hero-graph-head) {
+        align-self: flex-start !important;
+        padding-top: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .graph-head,
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] .hero-graph-head {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"],
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-graph-zone-marker) ~ [data-testid="stElementContainer"] [data-testid="stPlotlyChart"] iframe {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="stElementContainer"]:has(.hero-section-end) ~ [data-testid="stElementContainer"],
+    div[data-testid="stVerticalBlock"]:has(.hero-cards-side) [data-testid="element-container"]:has(.hero-section-end) ~ [data-testid="element-container"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) > div,
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stVerticalBlock"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: var(--hero-stack-h, 480px) !important;
+        height: var(--hero-stack-h, 480px) !important;
+        max-height: var(--hero-stack-h, 480px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) .graph-head,
+    div[data-testid="column"]:has(.hero-graph-anchor) .hero-graph-head {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) .arrow-wrap,
+    div[data-testid="column"]:has(.hero-graph-anchor) .hero-arrow-wrap {
+        margin-top: 0 !important;
+    }
+    .dashboard-graph-chart-marker { display: none !important; }
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stElementContainer"]:has(.dashboard-graph-chart-marker) + [data-testid="stElementContainer"],
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="element-container"]:has(.dashboard-graph-chart-marker) + [data-testid="element-container"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--hero-chart-h, 380px) !important;
+        max-height: var(--hero-chart-h, 380px) !important;
+        margin-top: 0 !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stPlotlyChart"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--hero-chart-h, 380px) !important;
+        max-height: var(--hero-chart-h, 380px) !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stPlotlyChart"] > div,
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stPlotlyChart"] iframe,
+    div[data-testid="column"]:has(.hero-graph-anchor) .js-plotly-plot,
+    div[data-testid="column"]:has(.hero-graph-anchor) .plot-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--hero-chart-h, 380px) !important;
+        max-height: var(--hero-chart-h, 380px) !important;
+    }
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="stElementContainer"],
+    div[data-testid="column"]:has(.hero-graph-anchor) [data-testid="element-container"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
     .top3-item { padding: 10px 0; border-bottom: 1px solid #eceff4; }
     .top3-item:last-child { border-bottom: none; }
     .dashboard-top-gap { margin-top: 8px; margin-bottom: 12px; }
@@ -158,6 +294,280 @@ CUMULATIVE_START_DATE = datetime(2026, 2, 23).date()
 CUMULATIVE_START_LABEL = "2026년 2월 23일"
 ROW_HIGHLIGHT_UNDER_3 = "#FFD8D8"
 CHECK_BLUE = "#4E6FFF"
+HERO_CARD_GAP_PX = 32
+HERO_COLUMN_GAP_PX = 40
+HERO_GRAPH_HEAD_PX = 80
+HERO_KPI_CARD_PX = 120
+HERO_TOP3_BASE_PX = 68
+HERO_TOP3_ROW_PX = 52
+HERO_STACK_BUFFER_PX = 8
+HERO_GRAPH_WIDTH_RATIO = 1.62
+SUMMARY_CARD_WIDTH_PX = 360
+
+
+def _hero_top3_row_count(table_rows):
+    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
+    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
+    if not top3_list:
+        return 1
+    _groups = OrderedDict()
+    for label, cnt in top3_list:
+        _groups.setdefault(cnt, []).append(label)
+    return min(3, len(_groups))
+
+
+def _hero_left_stack_height_px(table_rows):
+    top3_h = HERO_TOP3_BASE_PX + _hero_top3_row_count(table_rows) * HERO_TOP3_ROW_PX
+    return (
+        top3_h
+        + HERO_CARD_GAP_PX
+        + HERO_KPI_CARD_PX
+        + HERO_CARD_GAP_PX
+        + HERO_KPI_CARD_PX
+        + HERO_STACK_BUFFER_PX
+    )
+
+
+def _hero_chart_height_px(table_rows):
+    return _hero_left_stack_height_px(table_rows) - HERO_GRAPH_HEAD_PX
+
+
+def _hero_graph_panel_width_px(table_rows):
+    """주황 영역(좌측 카드 옆 패널) 가로 — 세로 높이에 맞춘 비율."""
+    chart_h = _hero_chart_height_px(table_rows)
+    return max(520, int(chart_h * HERO_GRAPH_WIDTH_RATIO))
+
+
+def _build_top3_card_html(table_rows):
+    top3_html = '<div class="top3-card dashboard-card-360 dashboard-hero-card-gap"><h4 style="margin:0 0 8px 0;">이번주 Top3</h4>'
+    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
+    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
+    _groups = OrderedDict()
+    for label, cnt in top3_list:
+        _groups.setdefault(cnt, []).append(label)
+    ranked_groups = []
+    rank = 0
+    for cnt, labels in _groups.items():
+        rank += 1
+        if rank > 3:
+            break
+        ranked_groups.append((rank, labels, cnt))
+    if ranked_groups:
+        badge_class = ["top3-1", "top3-2", "top3-3"]
+        for r, labels, cnt in ranked_groups:
+            bc = badge_class[r - 1] if r <= 3 else "top3-3"
+            bold_labels = []
+            for lb in labels:
+                if " (" in lb:
+                    real_name, rest = lb.split(" (", 1)
+                    bold_labels.append(f"<b>{real_name}</b> ({rest}")
+                else:
+                    bold_labels.append(f"<b>{lb}</b>")
+            top3_html += (
+                f'<div class="top3-item"><b>{r}등</b> {", ".join(bold_labels)} '
+                f'<span class="top3-badge {bc}">{cnt}회</span></div>'
+            )
+    else:
+        top3_html += '<div class="top3-item">이번 주 인증 데이터가 없습니다.</div>'
+    top3_html += "</div>"
+    return top3_html
+
+
+def _build_hero_left_cards_html(table_rows, this_week_total_certs, under_three_count, total_members):
+    """좌측 히어로 카드 3개를 360px 단일 블록으로 묶음 (Streamlit 열 50% 확장 방지)."""
+    return (
+        '<div class="hero-cards-stack">'
+        f"{_build_top3_card_html(table_rows)}"
+        f'<div class="kpi-card dashboard-card-360 dashboard-hero-card-gap"><div class="kpi-title">이번주 총 인증글 수 (누적)</div>'
+        f'<div><span class="kpi-value">{this_week_total_certs}</span><span class="kpi-unit">회</span></div></div>'
+        f'<div class="kpi-card dashboard-card-360"><div class="kpi-title">3회 이상 인증하지 않은 인원 수</div>'
+        f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span>'
+        f'<span class="kpi-unit" style="margin-left:0;"> / {total_members}명</span></div></div>'
+        "</div>"
+    )
+
+
+def _fix_hero_float_layout_js(stack_h: int) -> None:
+    ml = SUMMARY_CARD_WIDTH_PX + HERO_COLUMN_GAP_PX
+    w = SUMMARY_CARD_WIDTH_PX
+    components.html(
+        f"""<script>
+(function() {{
+  const doc = window.parent.document;
+  const ML = {ml};
+  const W = {w};
+  const STACK_H = {stack_h};
+  const WCALC = "calc(100% - " + ML + "px)";
+  function apply() {{
+    const cards = doc.querySelector(".hero-cards-side");
+    const vBlock = cards && cards.closest('[data-testid="stVerticalBlock"]');
+    if (!vBlock || !cards) return;
+    vBlock.style.setProperty("position", "relative", "important");
+    vBlock.style.setProperty("min-height", STACK_H + "px", "important");
+    vBlock.style.setProperty("width", "100%", "important");
+    vBlock.style.setProperty("gap", "0", "important");
+    vBlock.style.setProperty("row-gap", "0", "important");
+    cards.style.setProperty("position", "absolute", "important");
+    cards.style.setProperty("left", "0", "important");
+    cards.style.setProperty("top", "0", "important");
+    cards.style.setProperty("width", W + "px", "important");
+    cards.style.setProperty("float", "none", "important");
+    let zone = false;
+    vBlock.querySelectorAll('[data-testid="stElementContainer"], [data-testid="element-container"]').forEach((ec) => {{
+      if (ec.querySelector(".hero-cards-side")) {{
+        ec.style.setProperty("height", "0", "important");
+        ec.style.setProperty("min-height", "0", "important");
+        ec.style.setProperty("overflow", "visible", "important");
+        ec.style.setProperty("margin", "0", "important");
+        ec.style.setProperty("padding", "0", "important");
+        return;
+      }}
+      if (ec.querySelector(".hero-section-end")) {{
+        zone = false;
+        ec.style.setProperty("margin-left", "0", "important");
+        ec.style.setProperty("width", "100%", "important");
+        ec.style.setProperty("max-width", "100%", "important");
+        return;
+      }}
+      if (ec.querySelector(".hero-graph-zone-marker")) zone = true;
+      if (!zone) {{
+        ec.style.setProperty("margin-left", "0", "important");
+        ec.style.setProperty("width", "100%", "important");
+        ec.style.setProperty("max-width", "100%", "important");
+        return;
+      }}
+      ec.style.setProperty("margin-left", ML + "px", "important");
+      ec.style.setProperty("margin-top", "0", "important");
+      ec.style.setProperty("margin-bottom", "0", "important");
+      ec.style.setProperty("padding", "0", "important");
+      ec.style.setProperty("padding-top", "0", "important");
+      ec.style.setProperty("width", WCALC, "important");
+      ec.style.setProperty("max-width", WCALC, "important");
+    }});
+    let hRow = null;
+    vBlock.querySelectorAll('[data-testid="stHorizontalBlock"]').forEach((hb) => {{
+      if (hb.querySelector(".hero-graph-head")) hRow = hb;
+    }});
+    if (hRow) {{
+      hRow.style.setProperty("align-items", "flex-start", "important");
+      hRow.style.setProperty("margin-top", "0", "important");
+      hRow.style.setProperty("padding-top", "0", "important");
+      const hEc = hRow.closest('[data-testid="stElementContainer"], [data-testid="element-container"]');
+      if (hEc) {{
+        hEc.style.setProperty("margin-top", "0", "important");
+        hEc.style.setProperty("padding-top", "0", "important");
+      }}
+    }}
+    vBlock.querySelectorAll('[data-testid="column"]').forEach((col) => {{
+      if (!col.querySelector(".hero-graph-head")) return;
+      col.style.setProperty("align-self", "flex-start", "important");
+      col.style.setProperty("padding-top", "0", "important");
+    }});
+    const head = vBlock.querySelector(".hero-graph-head");
+    if (head && cards) {{
+      const delta = head.getBoundingClientRect().top - cards.getBoundingClientRect().top;
+      if (Math.abs(delta) > 0.5) {{
+        const titleEc = head.closest('[data-testid="stElementContainer"], [data-testid="element-container"]')
+          || (hRow && hRow.closest('[data-testid="stElementContainer"], [data-testid="element-container"]'));
+        if (titleEc) titleEc.style.setProperty("margin-top", (-delta) + "px", "important");
+      }}
+    }}
+    const iframe = vBlock.querySelector('[data-testid="stPlotlyChart"] iframe');
+    if (iframe) {{
+      const w = iframe.parentElement && iframe.parentElement.getBoundingClientRect().width;
+      if (w > 0) iframe.style.setProperty("width", w + "px", "important");
+      try {{
+        const win = iframe.contentWindow;
+        const gd = win && win.document.querySelector(".js-plotly-plot");
+        if (gd && win.Plotly) win.Plotly.Plots.resize(gd);
+      }} catch (e) {{}}
+    }}
+  }}
+  apply();
+  [0, 50, 150, 400, 800, 1500, 2500].forEach((t) => setTimeout(apply, t));
+  window.parent.addEventListener("resize", apply);
+}})();
+</script>""",
+        height=0,
+        width=0,
+    )
+
+
+def _render_dashboard_hero_section(
+    table_rows,
+    cafe_rows,
+    week_sun,
+    today,
+    this_week_total_certs,
+    under_three_count,
+) -> None:
+    _hero_stack_h = _hero_left_stack_height_px(table_rows)
+    _hero_chart_h = _hero_chart_height_px(table_rows)
+    _cards = _build_hero_left_cards_html(
+        table_rows, this_week_total_certs, under_three_count, len(NAME_ID_LIST)
+    )
+    st.markdown(
+        f'<div class="dashboard-hero-row-boundary" aria-hidden="true"></div>'
+        f"<style>div[data-testid=\"stVerticalBlock\"]:has(.hero-cards-side){{"
+        f"--hero-stack-h:{_hero_stack_h}px;--hero-chart-h:{_hero_chart_h}px;}}</style>"
+        f'<div class="hero-cards-side">{_cards}</div>',
+        unsafe_allow_html=True,
+    )
+    g_title_col, g_btn_col = st.columns([0.92, 0.08], gap="small")
+    with g_title_col:
+        if st.session_state["graph_view_mode"] == "realtime":
+            st.markdown(
+                '<div class="hero-graph-zone-marker" aria-hidden="true"></div>'
+                '<div class="graph-head hero-graph-head"><h3>실시간 운동 인증 그래프</h3>'
+                "<p>지난주와 이번주의 운동인증량을 실시간으로 비교합니다.</p></div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<div class="hero-graph-zone-marker" aria-hidden="true"></div>'
+                '<div class="graph-head hero-graph-head"><h3>지난주 평균 운동 인증 그래프</h3>'
+                "<p>지난주와 이번주의 평균 운동 인증량을 비교합니다.</p></div>",
+                unsafe_allow_html=True,
+            )
+    with g_btn_col:
+        st.markdown('<div class="arrow-wrap hero-arrow-wrap">', unsafe_allow_html=True)
+        pcol, ncol = st.columns(2, gap="small")
+        with pcol:
+            if st.button(
+                "‹",
+                key="graph_prev",
+                disabled=st.session_state["graph_view_mode"] == "realtime",
+            ):
+                st.session_state["graph_view_mode"] = "realtime"
+                st.rerun()
+        with ncol:
+            if st.button(
+                "›",
+                key="graph_next",
+                disabled=st.session_state["graph_view_mode"] == "avg",
+            ):
+                st.session_state["graph_view_mode"] = "avg"
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('<div class="dashboard-graph-chart-marker" aria-hidden="true"></div>', unsafe_allow_html=True)
+    if st.session_state["graph_view_mode"] == "realtime":
+        _fig_hero = _fig_realtime_exercise_lines(
+            cafe_rows, week_sun, today, chart_height=_hero_chart_h
+        )
+    else:
+        _fig_hero = _fig_avg_week_mean_bars(
+            cafe_rows, week_sun, today, chart_height=_hero_chart_h
+        )
+    _fig_hero.update_layout(
+        height=_hero_chart_h,
+        autosize=True,
+        width=None,
+        margin=dict(t=20, b=40, l=8, r=8),
+    )
+    st.plotly_chart(_fig_hero, width="stretch", key="weekly_hero_chart_top")
+    st.markdown('<div class="hero-section-end" aria-hidden="true"></div>', unsafe_allow_html=True)
+    _fix_hero_float_layout_js(_hero_stack_h)
+
 
 _TITLE_ALIASES = {}
 for _n, _c in NAME_ID_LIST:
@@ -426,6 +836,7 @@ def _render_top3_section(table_rows, title: str, empty_msg=None):
 def _fig_week_compare_lines(
     y_prev, y_this, week_dates, prev_dates, today_d=None, highlight_today=False,
     legend_prev="지난주", legend_this="이번주", hover_prev_prefix="지난주", hover_this_prefix="이번주",
+    chart_height=360,
 ):
     x_cat = [WEEKDAY_NAMES[d.weekday()] for d in week_dates]
     hover_prev = [
@@ -498,8 +909,9 @@ def _fig_week_compare_lines(
         yaxis_title="인증 수 (명)",
         yaxis=dict(range=[0, y_top]),
         legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
-        margin=dict(t=24, b=48),
-        height=360,
+        margin=dict(t=20, b=40, l=8, r=16),
+        height=chart_height,
+        autosize=False,
         hovermode="closest",
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -507,7 +919,7 @@ def _fig_week_compare_lines(
     return fig
 
 
-def _fig_realtime_exercise_lines(rows, week_sun, today_d):
+def _fig_realtime_exercise_lines(rows, week_sun, today_d, chart_height=360):
     """지난주 vs 이번주 일별 인증 명 수 라인. 이번주는 오늘까지만 선 연결."""
     prev_sun = week_sun - timedelta(days=7)
     prev_sat = prev_sun + timedelta(days=6)
@@ -516,7 +928,8 @@ def _fig_realtime_exercise_lines(rows, week_sun, today_d):
     y_last = _daily_cert_counts_for_week_readonly(rows, prev_sun, prev_sat)
     y_this = _daily_cert_counts_for_week_readonly(rows, week_sun, week_sun + timedelta(days=6))
     return _fig_week_compare_lines(
-        y_last, y_this, week_dates, prev_dates, today_d=today_d, highlight_today=True
+        y_last, y_this, week_dates, prev_dates, today_d=today_d, highlight_today=True,
+        chart_height=chart_height,
     )
 
 
@@ -534,7 +947,7 @@ def _fig_archive_week_lines(merged_this_week, merged_prev_week, sun_d):
     )
 
 
-def _fig_avg_week_mean_bars(rows, week_sun, today_d):
+def _fig_avg_week_mean_bars(rows, week_sun, today_d, chart_height=360):
     """지난주(일~토) vs 이번주(일~오늘) 일평균 막대."""
     prev_sun = week_sun - timedelta(days=7)
     y_last = _daily_cert_counts_for_week_readonly(rows, prev_sun, prev_sun + timedelta(days=6))
@@ -569,8 +982,8 @@ def _fig_avg_week_mean_bars(rows, week_sun, today_d):
     )
     fig.update_layout(
         showlegend=False,
-        height=360,
-        margin=dict(t=16, b=48, l=24, r=24),
+        height=chart_height,
+        margin=dict(t=16, b=40, l=8, r=16),
         yaxis=dict(range=[0, max(v_last, v_this, 1) * 1.28], showgrid=True, title=None),
         xaxis=dict(title=None),
         plot_bgcolor="rgba(0,0,0,0)",
@@ -692,92 +1105,14 @@ if "graph_view_mode" not in st.session_state:
     st.session_state["graph_view_mode"] = "realtime"
 
 st.markdown('<div class="dashboard-top-gap"></div>', unsafe_allow_html=True)
-top_left, top_right = st.columns([1.75, 1.1], gap="medium")
-with top_left:
-    kpi_col1, kpi_col2 = st.columns(2, gap="medium")
-    with kpi_col1:
-        st.markdown(
-            f'<div class="kpi-card"><div class="kpi-title">이번주 총 인증글 수 (누적)</div>'
-            f'<div><span class="kpi-value">{this_week_total_certs}</span><span class="kpi-unit">회</span></div></div>',
-            unsafe_allow_html=True,
-        )
-    with kpi_col2:
-        st.markdown(
-            f'<div class="kpi-card"><div class="kpi-title">3회 이상 인증하지 않은 인원 수</div>'
-            f'<div><span class="kpi-value" style="color:#ef4444;">{under_three_count}</span><span class="kpi-unit">명</span>'
-            f'<span class="kpi-unit" style="margin-left:0;"> / {len(NAME_ID_LIST)}명</span></div></div>',
-            unsafe_allow_html=True,
-        )
-    g_title_col, g_btn_col = st.columns([0.88, 0.12], gap="small")
-    with g_title_col:
-        if st.session_state["graph_view_mode"] == "realtime":
-            st.markdown(
-                '<div class="graph-head"><h3>실시간 운동 인증 그래프</h3><p>지난주와 이번주의 운동인증량을 실시간으로 비교합니다.</p></div>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                '<div class="graph-head"><h3>지난주 평균 운동 인증 그래프</h3><p>지난주와 이번주의 평균 운동 인증량을 비교합니다.</p></div>',
-                unsafe_allow_html=True,
-            )
-    with g_btn_col:
-        st.markdown('<div class="arrow-wrap">', unsafe_allow_html=True)
-        pcol, ncol = st.columns(2, gap="small")
-        with pcol:
-            if st.button("‹", key="graph_prev", disabled=st.session_state["graph_view_mode"] == "realtime"):
-                st.session_state["graph_view_mode"] = "realtime"
-                st.rerun()
-        with ncol:
-            if st.button("›", key="graph_next", disabled=st.session_state["graph_view_mode"] == "avg"):
-                st.session_state["graph_view_mode"] = "avg"
-                st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-    if st.session_state["graph_view_mode"] == "realtime":
-        st.plotly_chart(
-            _fig_realtime_exercise_lines(cafe_rows, week_sun, today),
-            width="stretch",
-            key="weekly_rt_line_top",
-        )
-    else:
-        st.plotly_chart(
-            _fig_avg_week_mean_bars(cafe_rows, week_sun, today),
-            width="stretch",
-            key="weekly_bar_mean_top",
-        )
-
-with top_right:
-    top3_html = '<div class="top3-card"><h4 style="margin:0 0 8px 0;">이번주 Top3</h4>'
-    sorted_by_count = sorted(table_rows, key=lambda x: -x[2])
-    top3_list = [(label, cnt) for label, _, cnt in sorted_by_count if cnt > 0]
-    _groups = OrderedDict()
-    for label, cnt in top3_list:
-        _groups.setdefault(cnt, []).append(label)
-    ranked_groups = []
-    rank = 0
-    for cnt, labels in _groups.items():
-        rank += 1
-        if rank > 3:
-            break
-        ranked_groups.append((rank, labels, cnt))
-    if ranked_groups:
-        badge_class = ["top3-1", "top3-2", "top3-3"]
-        for r, labels, cnt in ranked_groups:
-            bc = badge_class[r - 1] if r <= 3 else "top3-3"
-            bold_labels = []
-            for lb in labels:
-                if " (" in lb:
-                    real_name, rest = lb.split(" (", 1)
-                    bold_labels.append(f"<b>{real_name}</b> ({rest}")
-                else:
-                    bold_labels.append(f"<b>{lb}</b>")
-            top3_html += (
-                f'<div class="top3-item"><b>{r}등</b> {", ".join(bold_labels)} '
-                f'<span class="top3-badge {bc}">{cnt}회</span></div>'
-            )
-    else:
-        top3_html += '<div class="top3-item">이번 주 인증 데이터가 없습니다.</div>'
-    top3_html += "</div>"
-    st.markdown(top3_html, unsafe_allow_html=True)
+_render_dashboard_hero_section(
+    table_rows,
+    cafe_rows,
+    week_sun,
+    today,
+    this_week_total_certs,
+    under_three_count,
+)
 
 _cumulative_counts = _cumulative_certs_by_person(archive, cafe_rows, week_sun)
 
